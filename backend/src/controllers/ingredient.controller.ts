@@ -18,3 +18,16 @@ export const createIngredient = async (
     next(err);
   }
 };
+
+export const getIngredients = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const ingredients = await prisma.ingredient.findMany();
+    res.json(ingredients);
+  } catch (err) {
+    next(err);
+  }
+};
