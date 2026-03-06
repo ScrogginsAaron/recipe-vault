@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createRecipe } from "../controllers/recipe.controller";
+import { createRecipe, getRecipes, attachIngredientToRecipe } from "../controllers/recipe.controller";
 import { validate } from "../middleware/validate";
 import { createRecipeSchema } from "../validators/recipe.schema";
 
@@ -7,8 +7,16 @@ const router = Router();
 
 router.post(
   "/",
-  validate(createRecipeSchema),
   createRecipe
+);
+router.get(
+  "/",
+  getRecipes
+);
+
+router.post(
+  "/:id/ingredients", 
+  attachIngredientToRecipe
 );
 
 export default router;
