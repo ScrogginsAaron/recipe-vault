@@ -19,4 +19,19 @@ router.post(
   attachIngredientToRecipe
 );
 
+router.get(
+  "/",
+  getRecipes
+);
+
+router.get(
+  "/:id",
+  getRecipeById
+);
+
+router.post(
+  "/:id/ingredients",
+  attachIngredientToRecipe
+);
+
 export default router;
