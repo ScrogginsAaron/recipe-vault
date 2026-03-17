@@ -74,3 +74,38 @@ export const attachIngredientToRecipe = async (req, res, next) => {
     next(err);
   }
 };
+
+export const removeIngredientFromRecipe = async (req, res, next) => {
+  try {
+    const { id, ingredientId } = req.params;
+    const existingRecipeIngredient = await prisma.recipeIngredient.findUnique({
+      where: {
+        recipeId_ingredientId: {
+          recipeId: id,
+          ingredientId: ingredientId,
+        },
+      },
+    });
+
+    if (!existingRecipeIngredient) {
+      return res.status(404).json({
+        message: "Ingredient not attached to this recipe",
+      });
+    }
+  
+    await prisma.recipeIngredient.delete({
+      where: {
+        recipeId_ingredientId: {
+          recipeId: id,
+          ingredientId,
+        },
+      },
+    });
+  
+    res.status(200).json({
+      message: "Ingredient removed from recipe successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
