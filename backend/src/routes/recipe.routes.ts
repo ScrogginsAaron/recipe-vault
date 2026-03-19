@@ -5,6 +5,7 @@ import {
   attachIngredientToRecipe, 
   getRecipeById, 
   searchRecipesByName,
+  searchRecipesByIngredient,
   removeIngredientFromRecipe,
 } from "../controllers/recipe.controller";
 import { validate } from "../middleware/validate";
@@ -20,6 +21,11 @@ router.post(
 router.get(
   "/search", 
   searchRecipesByName
+);
+
+router.get(
+  "/search/ingredient",
+  searchRecipesByIngredient
 );
 
 router.get(
