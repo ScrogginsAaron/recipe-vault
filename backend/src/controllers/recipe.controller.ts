@@ -273,3 +273,35 @@ export const removeIngredientFromRecipe = async (req, res, next) => {
     next(err);
   }
 };
+
+export const deleteRecipe = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+   
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id },
+    });
+
+    if(!existingRecipe) {
+      return res.status(404).json({
+        message: "Recipe not found",
+      });
+    }
+
+    await prisma.recipeIngredient.deleteMany({
+      where: {
+        recipeId: id,
+      },
+    });
+
+    await prisma.recipe.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({
+      message: "Recipe deleted successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};

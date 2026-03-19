@@ -8,6 +8,7 @@ import {
   searchRecipesByName,
   searchRecipesByIngredient,
   removeIngredientFromRecipe,
+  deleteRecipe,
 } from "../controllers/recipe.controller";
 import { validate } from "../middleware/validate";
 import { createRecipeSchema } from "../validators/recipe.schema";
@@ -37,6 +38,11 @@ router.get(
 router.get(
   "/:id",
   getRecipeById
+);
+
+router.delete(
+  "/:id",
+  deleteRecipe
 );
 
 router.get(
