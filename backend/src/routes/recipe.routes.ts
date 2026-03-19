@@ -4,6 +4,7 @@ import {
   getRecipes, 
   attachIngredientToRecipe, 
   getRecipeById, 
+  getRandomRecipe,
   searchRecipesByName,
   searchRecipesByIngredient,
   removeIngredientFromRecipe,
@@ -16,6 +17,11 @@ const router = Router();
 router.post(
   "/",
   createRecipe
+);
+
+router.get(
+  "/random",
+  getRandomRecipe
 );
 
 router.get(
