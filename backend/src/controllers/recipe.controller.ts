@@ -93,6 +93,58 @@ export const searchRecipesByName = async (req, res, next) => {
   }
 };
 
+export const searchRecipesByIngredient = async (req, res, next) => {
+  try {
+    const { name } = req.query;
+
+    if (!name || typeof name !== "string") {
+      return res.status(400).json({
+        message: "Query parameter 'name' is required",
+      });
+    }
+  
+    const recipes = await prisma.recipe.findMany({
+      where: {
+        ingredients: {
+          some: {
+            ingredient: {
+              name: {
+                contains: name.trim(),
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      },
+      include: {
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+ 
+    const formattedRecipes = recipes.map((recipe) => ({
+      id: recipe.id,
+      name: recipe.name,
+      createdAt: recipe.createdAt,
+      ingredients: recipe.ingredients.map((ri) => ({
+        id: ri.ingredient.id,
+        name: ri.ingredient.name,
+        quantity: ri.quantity,
+      })),
+    }));
+  
+    return res.status(200).json(formattedRecipes);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getRecipes = async (req, res, next) => {
   try {
     const recipes = await prisma.recipe.findMany({
