@@ -4,6 +4,7 @@ import {
   getRecipes, 
   attachIngredientToRecipe, 
   getRecipeById, 
+  searchRecipesByName,
   removeIngredientFromRecipe,
 } from "../controllers/recipe.controller";
 import { validate } from "../middleware/validate";
@@ -17,8 +18,8 @@ router.post(
 );
 
 router.get(
-  "/",
-  getRecipes
+  "/search", 
+  searchRecipesByName
 );
 
 router.get(
@@ -26,11 +27,19 @@ router.get(
   getRecipeById
 );
 
+router.get(
+  "/",
+  getRecipes
+);
+
 router.post(
   "/:id/ingredients",
   attachIngredientToRecipe
 );
 
-router.delete("/:id/ingredients/:ingredientId", removeIngredientFromRecipe);
+router.delete(
+  "/:id/ingredients/:ingredientId", 
+  removeIngredientFromRecipe
+);
 
 export default router;
