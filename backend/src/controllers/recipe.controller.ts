@@ -145,6 +145,49 @@ export const searchRecipesByIngredient = async (req, res, next) => {
   }
 };
 
+export const getRandomRecipe = async (req, res, next) => {
+  try {
+    const count = await prisma.recipe.count();
+    
+    if (count === 0) {
+      return res.status(404).json({
+        message: "No recipes found",
+      });
+    }
+
+    const randomIndex = Math.floor(Math.random() * count);
+  
+    const recipes = await prisma.recipe.findMany({
+      skip: randomIndex,
+      take: 1,
+      include: {
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+    });
+
+    const recipe = recipes[0];
+
+    const formattedRecipe = {
+      id: recipe.id,
+      name: recipe.name,
+      createdAt: recipe.createdAt,
+      ingredients: recipe.ingredients.map((ri) => ({
+        id: ri.ingredient.id,
+        name: ri.ingredient.name,
+        quantity: ri.quantity,
+      })),
+    };
+
+    return res.status(200).json(formattedRecipe);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getRecipes = async (req, res, next) => {
   try {
     const recipes = await prisma.recipe.findMany({
