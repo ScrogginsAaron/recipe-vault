@@ -8,6 +8,7 @@ import {
   searchRecipesByName,
   searchRecipesByIngredient,
   removeIngredientFromRecipe,
+  updateRecipeIngredientQuantity,
   deleteRecipe,
 } from "../controllers/recipe.controller";
 import { validate } from "../middleware/validate";
@@ -53,6 +54,11 @@ router.get(
 router.post(
   "/:id/ingredients",
   attachIngredientToRecipe
+);
+
+router.patch(
+  "/:id/ingredients/:ingredientId",
+  updateRecipeIngredientQuantity
 );
 
 router.delete(

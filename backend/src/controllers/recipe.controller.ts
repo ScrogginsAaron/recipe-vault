@@ -305,3 +305,52 @@ export const deleteRecipe = async (req, res, next) => {
     next(err);
   }
 };
+
+export const updateRecipeIngredientQuantity = async (req, res, next) => {
+  try {
+    const { id, ingredientId } = req.params;
+    const { quantity } = req.body;
+
+    const existingRecipeIngredient = await prisma.recipeIngredient.findUnique({
+      where: {
+        recipeId_ingredientId: {
+          recipeId: id,
+          ingredientId,
+        },
+      },
+    });
+ 
+    if (!existingRecipeIngredient) {
+      return res.status(404).json({
+        message: "Ingredient not attached to this recipe",
+      });
+    }
+
+    const updatedRecipeIngredient = await prisma.recipeIngredient.update({
+      where: {
+        recipeId_ingredientId: {
+          recipeId: id,
+          ingredientId,
+        },
+      },
+      data: {
+        quantity,
+      },
+      include: {
+        ingredient: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Ingredient quantity updated successfully",
+      recipeIngredient: {
+        recipeId: updatedRecipeIngredient.recipeId,
+        ingredientId: updatedRecipeIngredient.ingredientId,
+        ingredientName: updatedRecipeIngredient.ingredient.name,
+        quantity: updatedRecipeIngredient.quantity,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
