@@ -354,3 +354,50 @@ export const updateRecipeIngredientQuantity = async (req, res, next) => {
     next(err);
   }
 };
+
+export const updateRecipe = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id },
+    });
+
+    if (!existingRecipe) {
+      return res.status(404).json({
+        message: "Recipe not found",
+      });
+    }
+
+    const updatedRecipe = await prisma.recipe.update({
+      where: { id },
+      data: {
+        name,
+      },
+      include: {
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: "Recipe updated successfully",
+      recipe: {
+        id: updatedRecipe.id,
+        name: updatedRecipe.name,
+        createdAt: updatedRecipe.createdAt,
+        ingredients: updatedRecipe.ingredients.map((ri) => ({
+          id: ri.ingredient.id,
+          name: ri.ingredient.name,
+          quantity: ri.quantity,
+        })),
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
