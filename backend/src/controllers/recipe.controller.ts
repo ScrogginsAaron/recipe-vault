@@ -3,10 +3,13 @@ import { createRecipeSchema } from "../validators/recipe.schema";
 
 export const createRecipe = async (req, res, next) => {
   try{
-    const { name } = req.body;
+    const { name, instructions } = req.body;
 
     const recipe = await prisma.recipe.create({
-      data: { name },
+      data: { 
+        name,
+        instructions: instructions ?? [],
+      },
     });
 
     res.status(201).json(recipe);
@@ -38,6 +41,7 @@ export const getRecipeById = async (req, res, next) => {
     const formattedRecipe = {
       id: recipe.id,
       name: recipe.name,
+      instructions: recipe.instructions,
       createdAt: recipe.createdAt,
       ingredients: recipe.ingredients.map((ri) => ({
         id: ri.ingredient.id,
@@ -81,6 +85,7 @@ export const searchRecipesByName = async (req, res, next) => {
     const formatted = recipes.map((recipe) => ({
       id: recipe.id,
       name: recipe.name,
+      instructions: recipe.instructions,
       ingredients: recipe.ingredients.map((ri) => ({
         name: ri.ingredient.name,
         quantity: ri.quantity,
@@ -131,6 +136,7 @@ export const searchRecipesByIngredient = async (req, res, next) => {
     const formattedRecipes = recipes.map((recipe) => ({
       id: recipe.id,
       name: recipe.name,
+      instructions: recipe.instructions,
       createdAt: recipe.createdAt,
       ingredients: recipe.ingredients.map((ri) => ({
         id: ri.ingredient.id,
@@ -174,6 +180,7 @@ export const getRandomRecipe = async (req, res, next) => {
     const formattedRecipe = {
       id: recipe.id,
       name: recipe.name,
+      instructions: recipe.instructions,
       createdAt: recipe.createdAt,
       ingredients: recipe.ingredients.map((ri) => ({
         id: ri.ingredient.id,
@@ -206,6 +213,7 @@ export const getRecipes = async (req, res, next) => {
     const formattedRecipes = recipes.map((recipe) => ({
       id: recipe.id,
       name: recipe.name,
+      instructions: recipe.instructions,
       createdAt: recipe.createdAt,
       ingredients: recipe.ingredients.map((ri) => ({
         id: ri.ingredient.id,
@@ -358,7 +366,7 @@ export const updateRecipeIngredientQuantity = async (req, res, next) => {
 export const updateRecipe = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, instructions } = req.body;
 
     const existingRecipe = await prisma.recipe.findUnique({
       where: { id },
@@ -373,7 +381,8 @@ export const updateRecipe = async (req, res, next) => {
     const updatedRecipe = await prisma.recipe.update({
       where: { id },
       data: {
-        name,
+        ...(name !== undefined && { name }),
+        ...(instructions !== undefined && { instructions }),
       },
       include: {
         ingredients: {
@@ -389,6 +398,7 @@ export const updateRecipe = async (req, res, next) => {
       recipe: {
         id: updatedRecipe.id,
         name: updatedRecipe.name,
+        instructions: updatedRecipe.instructions,
         createdAt: updatedRecipe.createdAt,
         ingredients: updatedRecipe.ingredients.map((ri) => ({
           id: ri.ingredient.id,

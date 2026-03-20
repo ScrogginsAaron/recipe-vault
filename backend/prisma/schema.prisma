@@ -18,6 +18,7 @@ model Recipe {
   name String
   createdAt DateTime @default(now())
   ingredients RecipeIngredient[]
+  instructions String[] @default([])
 }
 
 model Ingredient {
