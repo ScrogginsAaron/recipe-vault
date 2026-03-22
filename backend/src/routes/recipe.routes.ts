@@ -13,12 +13,27 @@ import {
   deleteRecipe,
 } from "../controllers/recipe.controller";
 import { validate } from "../middleware/validate";
-import { createRecipeSchema } from "../validators/recipe.schema";
+import {
+  createRecipeSchema,
+  updateRecipeSchema,
+} from "../validators/recipe.schema";
+import {
+  attachIngredientSchema,
+  updateRecipeIngredientQuantitySchema,
+} from "../validators/ingredient.schema";
+import {
+  searchByNameSchema 
+} from "../validators/search.schema";
+import { 
+  recipeIdParamSchema, 
+  recipeIngredientParamsSchema,
+} from "../validators/params.schema";
 
 const router = Router();
 
 router.post(
   "/",
+  validate(createRecipeSchema),
   createRecipe
 );
 
@@ -29,26 +44,32 @@ router.get(
 
 router.get(
   "/search", 
+  validate(searchByNameSchema, "query"),
   searchRecipesByName
 );
 
 router.get(
   "/search/ingredient",
+  validate(searchByNameSchema, "query"),
   searchRecipesByIngredient
 );
 
 router.get(
   "/:id",
+  validate(recipeIdParamSchema, "params"),
   getRecipeById
 );
 
 router.patch(
   "/:id",
+  validate(recipeIdParamSchema, "params"),
+  validate(updateRecipeSchema),
   updateRecipe
 );
 
 router.delete(
   "/:id",
+  validate(recipeIdParamSchema, "params"),
   deleteRecipe
 );
 
@@ -59,16 +80,21 @@ router.get(
 
 router.post(
   "/:id/ingredients",
+  validate(recipeIdParamSchema, "params"),
+  validate(attachIngredientSchema),
   attachIngredientToRecipe
 );
 
 router.patch(
   "/:id/ingredients/:ingredientId",
+  validate(recipeIngredientParamsSchema, "params"),
+  validate(updateRecipeIngredientQuantitySchema),
   updateRecipeIngredientQuantity
 );
 
 router.delete(
   "/:id/ingredients/:ingredientId", 
+  validate(recipeIngredientParamsSchema, "params"),
   removeIngredientFromRecipe
 );
 
