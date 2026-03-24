@@ -213,16 +213,29 @@ export const getRandomRecipe = async (req, res, next) => {
 
 export const getRecipes = async (req, res, next) => {
   try {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      order = "desc",
+    } = req.query;
+
+    const skip = (Number(page) -1) * Number(limit);
+
+    const totalRecipes = await prisma.recipe.count();
+
     const recipes = await prisma.recipe.findMany({
+      skip,
+      take: Number(limit),
+      orderBy: {
+        [sortBy]: order,
+      },
       include: {
         ingredients: {
           include: {
             ingredient: true,
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
       },
     });
 
@@ -241,6 +254,12 @@ export const getRecipes = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: formattedRecipes,
+      pagination: {
+        total: totalRecipes,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalRecipes / Number(limit)),
+      },
     });
   } catch (err) {
     next(err);
