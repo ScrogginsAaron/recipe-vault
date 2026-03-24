@@ -22,7 +22,8 @@ import {
   updateRecipeIngredientQuantitySchema,
 } from "../validators/ingredient.schema";
 import {
-  searchByNameSchema 
+  searchByNameSchema,
+  getRecipesQuerySchema,
 } from "../validators/search.schema";
 import { 
   recipeIdParamSchema, 
@@ -75,6 +76,7 @@ router.delete(
 
 router.get(
   "/",
+  validate(getRecipesQuerySchema, "query"), 
   getRecipes
 );
 
