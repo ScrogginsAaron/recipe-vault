@@ -13,7 +13,11 @@ export const createIngredient = async (
       data: { name },
     });
 
-    res.status(201).json(ingredient);
+    res.status(201).json({
+      success: true,
+      message: "Ingredient created successfully",
+      data: ingredient,
+    });
   } catch (err) {
     next(err);
   }
@@ -26,7 +30,10 @@ export const getIngredients = async (
 ) => {
   try {
     const ingredients = await prisma.ingredient.findMany();
-    res.json(ingredients);
+    res.status(200).json({
+      success: true,
+      data: ingredients,
+    });
   } catch (err) {
     next(err);
   }

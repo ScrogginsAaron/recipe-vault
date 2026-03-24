@@ -12,7 +12,11 @@ export const createRecipe = async (req, res, next) => {
       },
     });
 
-    res.status(201).json(recipe);
+    res.status(201).json({
+      success: true,
+      message: "Recipe created successfully",
+      data: recipe,
+    });
   }  catch (err) {
     next(err);
   }
@@ -50,7 +54,10 @@ export const getRecipeById = async (req, res, next) => {
      })),
     };
 
-    res.status(200).json(formattedRecipe);
+    res.status(200).json({
+      success: true,
+      data: formattedRecipe,
+    });
   } catch (err) {
     next(err);
   }
@@ -92,7 +99,10 @@ export const searchRecipesByName = async (req, res, next) => {
       })),
     }));
 
-    res.status(200).json(formatted);
+    res.status(200).json({
+      success: true,
+      data: formattedRecipes,
+    });
   } catch (err) {
     next(err);
   }
@@ -145,7 +155,10 @@ export const searchRecipesByIngredient = async (req, res, next) => {
       })),
     }));
   
-    return res.status(200).json(formattedRecipes);
+    return res.status(200).json({
+      success: true,
+      data: formattedRecipes,
+    });
   } catch (err) {
     next(err);
   }
@@ -189,7 +202,10 @@ export const getRandomRecipe = async (req, res, next) => {
       })),
     };
 
-    return res.status(200).json(formattedRecipe);
+    return res.status(200).json({
+      success: true,
+      data: formattedRecipe,
+    });
   } catch (err) {
     next(err);
   }
@@ -222,7 +238,10 @@ export const getRecipes = async (req, res, next) => {
       })),
     }));
 
-    res.status(200).json(formattedRecipes);
+    res.status(200).json({
+      success: true,
+      data: formattedRecipes,
+    });
   } catch (err) {
     next(err);
   }
@@ -241,7 +260,11 @@ export const attachIngredientToRecipe = async (req, res, next) => {
       }
     });
 
-    res.status(201).json(recipeIngredient);
+    res.status(201).json({
+      success: true,
+      message: "Ingredient attached to recipe successfully",
+      data: recipeIngredient,
+    });
   } catch (err) {
     next(err);
   }
@@ -275,6 +298,7 @@ export const removeIngredientFromRecipe = async (req, res, next) => {
     });
   
     res.status(200).json({
+      success: true,
       message: "Ingredient removed from recipe successfully",
     });
   } catch (err) {
@@ -307,6 +331,7 @@ export const deleteRecipe = async (req, res, next) => {
     });
 
     return res.status(200).json({
+      success: true,
       message: "Recipe deleted successfully",
     });
   } catch (err) {
@@ -350,6 +375,7 @@ export const updateRecipeIngredientQuantity = async (req, res, next) => {
     });
 
     return res.status(200).json({
+      success: true,
       message: "Ingredient quantity updated successfully",
       recipeIngredient: {
         recipeId: updatedRecipeIngredient.recipeId,
@@ -394,8 +420,9 @@ export const updateRecipe = async (req, res, next) => {
     });
 
     return res.status(200).json({
+      success: true,
       message: "Recipe updated successfully",
-      recipe: {
+      data: {
         id: updatedRecipe.id,
         name: updatedRecipe.name,
         instructions: updatedRecipe.instructions,
