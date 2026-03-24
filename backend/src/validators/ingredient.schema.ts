@@ -21,3 +21,9 @@ export const updateRecipeIngredientQuantitySchema = z.object({
     .string()
     .min(1, "Quantity is required"),
 });
+
+export const updateIngredientSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Ingredient name is required"),
+});
