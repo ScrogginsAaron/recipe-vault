@@ -113,7 +113,9 @@ export const getFavorites = async (req, res, next) => {
     const formattedFavorites = favorites.map((favorite) => ({
       id: favorite.recipe.id,
       name: favorite.recipe.name,
+      description: favorite.recipe.description,
       instructions: favorite.recipe.instructions,
+      mealTypes: favorite.recipe.mealTypes,
       createdAt: favorite.recipe.createdAt,
       ingredients: favorite.recipe.ingredients.map((ri) => ({
         id: ri.ingredient.id,
