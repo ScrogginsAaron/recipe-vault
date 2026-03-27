@@ -13,12 +13,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id    String  @id @default(uuid())
+  email String  @unique
+  password String
+  createdAt DateTime  @default(now())
+  favorites Favorite[]
+}
+
 model Recipe {
   id   String @id @default(uuid())
   name String
   createdAt DateTime @default(now())
   ingredients RecipeIngredient[]
   instructions String[] @default([])
+  favorites Favorite[]
+  mealTypes String[] @default([])
 }
 
 model Ingredient {
@@ -36,4 +46,15 @@ model RecipeIngredient {
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
 
   @@id([recipeId, ingredientId])
+}
+
+model Favorite {
+  userId  String
+  recipeId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id])
+
+  @@id([userId, recipeId])
 }
