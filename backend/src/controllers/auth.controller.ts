@@ -2,7 +2,11 @@ import prisma from "../config/prisma";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateToken";
 
-export const registerUser = async (req, res, next) => {
+export const registerUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email, password } = req.body;
 
@@ -45,7 +49,11 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
-export const loginUser = async (req, res, next) => {
+export const loginUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email, password } = req.body;
 
@@ -73,7 +81,7 @@ export const loginUser = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: "Login successful",
+      message: "User logged in successfully",
       data: {
         user: {
           id: user.id,

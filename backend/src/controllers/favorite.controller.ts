@@ -1,9 +1,13 @@
 import prisma from "../config/prisma";
 
-export const addFavorite = async (req, res, next) => {
+export const addFavorite = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { recipeId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const existingRecipe = await prisma.recipe.findUnique({
       where: { id: recipeId },
@@ -49,10 +53,14 @@ export const addFavorite = async (req, res, next) => {
   }
 };
 
-export const removeFavorite = async (req, res, next) => {
+export const removeFavorite = async (
+  req: Request, 
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { recipeId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const existingFavorite = await prisma.favorite.findUnique({
       where: {
@@ -88,9 +96,13 @@ export const removeFavorite = async (req, res, next) => {
   }
 };
 
-export const getFavorites = async (req, res, next) => {
+export const getFavorites = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const favorites = await prisma.favorite.findMany({
       where: { userId },
@@ -127,6 +139,7 @@ export const getFavorites = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      message: "Favorites retrieved successfully.",
       data: formattedFavorites,
     });
   } catch(err) {

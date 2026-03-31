@@ -32,6 +32,7 @@ export const getIngredients = async (
     const ingredients = await prisma.ingredient.findMany();
     res.status(200).json({
       success: true,
+      message: "Ingredients retrieved successfully.",
       data: ingredients,
     });
   } catch (err) {
@@ -39,7 +40,11 @@ export const getIngredients = async (
   }
 };
 
-export const getIngredientById = async (req, res, next) => {
+export const getIngredientById = async (
+  req: Request, 
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     
@@ -56,6 +61,7 @@ export const getIngredientById = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      message: "Ingredient retrieved successfully",
       data: ingredient,
     });
   } catch (err) {
@@ -63,7 +69,11 @@ export const getIngredientById = async (req, res, next) => {
   }
 };
 
-export const updateIngredient = async (req, res, next) => {
+export const updateIngredient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
@@ -94,7 +104,11 @@ export const updateIngredient = async (req, res, next) => {
   } 
 };
 
-export const deleteIngredient = async (req, res, next) => {
+export const deleteIngredient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
 
