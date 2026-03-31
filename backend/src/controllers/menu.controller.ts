@@ -63,7 +63,7 @@ function tryCombineQuantities(quantities: string[]) {
 
   const total = parsed.reduce((sum, item) => sum + item!.value, 0);
 
-  return '${total} ${firstUnit}';
+  return `${total} ${firstUnit}`;
 }
 
 function buildIngredientSummary(menu: any[]) {
@@ -103,10 +103,14 @@ function buildIngredientSummary(menu: any[]) {
   }));
 }
 
-export const generateWeeklyMenu = async (req, res, next) => {
+export const generateWeeklyMenu = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { source, days = 7, mealType } = req.body;
-    const userId = req.user.id;
+    const { source, days = 7 } = req.body;
+    const userId = req.user!.id;
 
     let recipes;
 

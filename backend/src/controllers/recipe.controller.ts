@@ -1,5 +1,4 @@
 import prisma from "../config/prisma";
-import { createRecipeSchema } from "../validators/recipe.schema";
 
 export const createRecipe = async (req, res, next) => {
   try{
@@ -26,8 +25,6 @@ export const createRecipe = async (req, res, next) => {
 
 export const getRecipeById = async (req, res, next) => {
   try {
-    console.log("HIT getRecipeById");
-    console.log("params:", req.params);
     const { id } = req.params;
     const recipe = await prisma.recipe.findUnique({
       where: { id },
@@ -41,7 +38,10 @@ export const getRecipeById = async (req, res, next) => {
     });
     
     if (!recipe) {
-      return res.status(404).json({ error: "Recipe not found" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Recipe not found" 
+      });
     }
     
     const formattedRecipe = {
@@ -60,6 +60,7 @@ export const getRecipeById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      message: "Recipe retrieved successfully",
       data: formattedRecipe,
     });
   } catch (err) {
@@ -73,6 +74,7 @@ export const searchRecipesByName = async (req, res, next) => {
 
     if(!name || typeof name !== "string") {
       return res.status(400).json({
+        success: false,
         message: "Query parameter 'name' is required",
       });
     }
@@ -108,6 +110,7 @@ export const searchRecipesByName = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      message: "Recipe(s) retrieved successfully.",
       data: formattedRecipes,
     });
   } catch (err) {
@@ -121,6 +124,7 @@ export const searchRecipesByIngredient = async (req, res, next) => {
 
     if (!name || typeof name !== "string") {
       return res.status(400).json({
+        success: false,
         message: "Query parameter 'name' is required",
       });
     }
@@ -166,6 +170,7 @@ export const searchRecipesByIngredient = async (req, res, next) => {
   
     return res.status(200).json({
       success: true,
+      message: "Recipe(s) retrieved successfully.",
       data: formattedRecipes,
     });
   } catch (err) {
@@ -179,6 +184,7 @@ export const getRandomRecipe = async (req, res, next) => {
     
     if (count === 0) {
       return res.status(404).json({
+        success: false,
         message: "No recipes found",
       });
     }
@@ -215,6 +221,7 @@ export const getRandomRecipe = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      message: "Recipe retrieved successfully.",
       data: formattedRecipe,
     });
   } catch (err) {
@@ -316,6 +323,7 @@ export const removeIngredientFromRecipe = async (req, res, next) => {
 
     if (!existingRecipeIngredient) {
       return res.status(404).json({
+        success: false,
         message: "Ingredient not attached to this recipe",
       });
     }
@@ -348,6 +356,7 @@ export const deleteRecipe = async (req, res, next) => {
 
     if(!existingRecipe) {
       return res.status(404).json({
+        success: false,
         message: "Recipe not found",
       });
     }
@@ -387,6 +396,7 @@ export const updateRecipeIngredientQuantity = async (req, res, next) => {
  
     if (!existingRecipeIngredient) {
       return res.status(404).json({
+        success: false,
         message: "Ingredient not attached to this recipe",
       });
     }
@@ -409,7 +419,7 @@ export const updateRecipeIngredientQuantity = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Ingredient quantity updated successfully",
-      recipeIngredient: {
+      data: {
         recipeId: updatedRecipeIngredient.recipeId,
         ingredientId: updatedRecipeIngredient.ingredientId,
         ingredientName: updatedRecipeIngredient.ingredient.name,
