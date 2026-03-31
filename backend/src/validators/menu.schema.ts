@@ -15,7 +15,4 @@ export const generateMenuSchema = z.object({
     .max(14)
     .optional()
     .default(7),
-  mealType: z
-    .enum(["breakfast", "lunch", "dinner", "dessert"])
-    .optional(),
 });
