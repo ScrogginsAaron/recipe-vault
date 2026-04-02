@@ -21,6 +21,10 @@ function shuffleArray<T>(array: T[]): T[] {
   return copy;
 }
 
+function normalizeIngredientName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
 function formatRecipe(recipe: any) {
   return {
     id: recipe.id,
@@ -37,70 +41,375 @@ function formatRecipe(recipe: any) {
   };
 }
 
-function tryCombineQuantities(quantities: string[]) {
-  const parsed = quantities.map((quantity) => {
-    const match = quantity.trim().match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
+function normalizeUnit(unit: string): string {
+  const u = unit.trim().toLowerCase();
 
-    if (!match) return null;
+  const unitMap: Record<string, string> = {
+    cup: "cup",
+    cups: "cup",
+    tbsp: "tablespoon",
+    tablespoon: "tablespoon",
+    tablespoons: "tablespoon",
+    tsp: "teaspoon",
+    teaspoon: "teaspoon",
+    teaspoons: "teaspoon",
+    oz: "ounce",
+    ounce: "ounce",
+    ounces: "ounce",
+    fl: "fluid ounce",
+    "fl oz": "fluid ounce",
+    "fluid ounce": "fluid ounce",
+    "fluid ounces": "fluid ounce",
+    lb: "pound",
+    lbs: "pound",
+    pound: "pound",
+    pounds: "pound",
+    g: "gram",
+    gram: "gram",
+    grams: "gram",
+    kg: "kilogram",
+    kilogram: "kilogram",
+    kilograms: "kilogram",
+    ml: "milliliter",
+    milliliter: "milliliter",
+    milliliters: "milliliter",
+    l: "liter",
+    liter: "liter",
+    liters: "liter",
+    clove: "clove",
+    cloves: "clove",
+    slice: "slice",
+    slices: "slice",
+    can: "can",
+    cans: "can",
+    package: "package",
+    packages: "package",
+    pkg: "package",
+    bag: "bag",
+    bags: "bag",
+    bunch: "bunch",
+    bunches: "bunch",
+    stick: "stick",
+    sticks: "stick",
+    piece: "piece",
+    pieces: "piece",
+    egg: "egg",
+    eggs: "egg",
+    filet: "filet",
+    filets: "filet",
+    fillet: "fillet",
+    fillets: "fillet",
+    jar: "jar",
+    jars: "jar",
+    bottle: "bottle",
+    bottles: "bottle",
+    pinch: "pinch",
+    pinches: "pinch",
+    dash: "dash",
+    dashes: "dash",
+  };
 
-    return {
-      value: Number(match[1]),
-      unit: match[2].trim().toLowerCase(),
-    };
-  });
-
-  if (parsed.some((item) => item === null)) {
-    return null;
-  }
-
-  const firstUnit = parsed[0]!.unit;
-
-  const sameUnit = parsed.every((item) => item!.unit === firstUnit);
-
-  if (!sameUnit) {
-    return null;
-  }
-
-  const total = parsed.reduce((sum, item) => sum + item!.value, 0);
-
-  return `${total} ${firstUnit}`;
+  return unitMap[u] ?? u;
 }
+
+function parseAmountToken(amountText: string): number | null {
+  const text = amountText.trim();
+
+  if (!text) return null;
+
+  if (/^\d+\s+\d+\/\d+$/.test(text)) {
+    const [whole, fraction] = text.split(/\s+/);
+    const [num, den] = fraction.split("/");
+    return Number(whole) + Number(num) / Number(den);
+  }
+
+  if (/^\d+\/\d+$/.test(text)) {
+    const [num, den] = text.split("/");
+    const denominator = Number(den);
+    if (!denominator) return null;
+    return Number(num) / denominator;
+  }
+
+  if (/^\d+(?:\.\d+)?$/.test(text)) {
+    return Number(text);
+  }
+
+  return null;
+}
+
+function formatTotalQuantity(amount: number, unit: string) {
+  const rounded = Number(amount.toFixed(2));
+
+  if (!unit) return `${rounded}`;
+  return `${rounded} ${unit}`;
+}
+
+function parseQuantity(quantity: string) {
+  const raw = quantity.trim();
+
+  if (!raw) {
+    return {
+      raw: quantity,
+      amount: null as number | null,
+      unit: "",
+      qualifier: "",
+      sizeText: "",
+      displayUnit: "",
+      parseable: false,
+    };
+  }
+
+  const normalized = raw
+    .replace(/-/g, "-")
+    .replace(/-/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (/^(to taste|as needed|for garnish|optional)$/i.test(normalized)) {
+    return {
+      raw: quantity,
+      amount: null,
+      unit: "",
+      qualifier: normalized.toLowerCase(),
+      sizeText: "",
+      displayUnit: "",
+      parseable: false,
+    };
+  }
+
+  const amountMatch = normalized.match(
+    /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)(?:\s*-\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?))?\s*(.*)$/i
+  );
+
+  if (!amountMatch) {
+    return {
+      raw: quantity,
+      amount: null,
+      unit: "",
+      qualifier: "",
+      sizeText: "",
+      displayUnit: "",
+      parseable: false,
+    };
+  }
+
+  const startAmount = parseAmountToken(amountMatch[1]);
+  const endAmount = amountMatch[2] ? parseAmountToken(amountMatch[2]) : null;
+  const remainder = (amountMatch[3] ?? "").trim();
+
+  if (startAmount === null) {
+    return {
+      raw: quantity,
+      amount: null,
+      unit: "",
+      qualifier: "",
+      sizeText: "",
+      displayUnit: "",
+      parseable: false,
+    };
+  }
+
+  const amount =
+    endAmount !== null ? endAmount : startAmount;
+
+  let rest = remainder;
+  let sizeText = "";
+  let qualifier = "";
+  
+  const parenMatches = [...rest.matchAll(/\(([^)]+)\)/g)];
+  if (parenMatches.length > 0) {
+    sizeText = parenMatches.map((m) => m[1].trim()).join(", ");
+    rest = rest.replace(/\(([^)]+)\)/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  const tokens = rest.split(/\s+/).filter(Boolean);
+
+  const candidateUnitLengths = [2, 1];
+  let detectedUnit = "";
+  let consumedTokenCount = 0;
+
+  for (const len of candidateUnitLengths) {
+    const phrase = tokens.slice(0, len).join(" ").toLowerCase();
+    const normalizedPhrase = normalizeUnit(phrase);
+
+    if (phrase && normalizedPhrase !== phrase) {
+      detectedUnit = normalizedPhrase;
+      consumedTokenCount = len;
+      break;
+    }
+
+    const knownSingleOrPhraseUnits = new Set([
+      "cup",
+      "tablespoon",
+      "teaspoon",
+      "ounce",
+      "fluid ounce",
+      "pound",
+      "gram",
+      "kilogram",
+      "milliliter",
+      "liter",
+      "clove",
+      "slice",
+      "can",
+      "package",
+      "bag",
+      "bunch",
+      "stick",
+      "piece",
+      "egg",
+      "filet",
+      "fillet",
+      "jar",
+      "bottle",
+      "pinch",
+      "dash",
+    ]);
+
+    if (knownSingleOrPhraseUnits.has(normalizedPhrase)) {
+      detectedUnit = normalizedPhrase;
+      consumedTokenCount = len;
+      break;
+    }
+  }
+
+  if (!detectedUnit && tokens.length > 0) {
+    const first = tokens[0].toLowerCase();
+    const descriptorWords = new Set([
+      "small",
+      "medium",
+      "large",
+      "extra-large",
+      "extra",
+    ]);
+
+    if (descriptorWords.has(first) && tokens.length > 1) {
+      const next = normalizeUnit(tokens[1].toLowerCase());
+      if (
+        [
+          "egg",
+          "clove",
+          "slice",
+          "can",
+          "package",
+          "bag",
+          "bunch",
+          "stick",
+          "piece",
+          "filet",
+          "fillet",
+          "jar",
+          "bottle",
+        ].includes(next)
+      ) {
+        qualifier = first;
+        detectedUnit = next;
+        consumedTokenCount = 2;
+      }
+    }
+  }
+        
+  const leftover = tokens.slice(consumedTokenCount).join(" ").trim();
+  const displayUnit = detectedUnit || "";
+
+  return {
+    raw: quantity,
+    amount,
+    unit: detectedUnit,
+    qualifier,
+    sizeText,
+    displayUnit,
+    remainder: leftover,
+    parseable: true,
+  };
+}
+
 
 function buildIngredientSummary(menu: any[]) {
   const ingredientMap = new Map<
     string,
-    { name: string; quantities: string[] }
+    { 
+      name: string; 
+      quantities: string[];
+      totalsByUnit: Map<string, number>;
+      unparsedQuantities: string[];
+      notes: string[];
+    }
   >();
   
   for (const day of menu) {
-    for (const mealKey of ["breakfast", "lunch", "dinner"]) {
+    for (const mealKey of ["breakfast", "lunch", "dinner"] as const) {
       const recipe = day.meals[mealKey];
     
       if (!recipe) continue;
 
       for (const ingredient of recipe.ingredients) {
-        const existing = ingredientMap.get(ingredient.name);
+        const originalName = ingredient.name?.trim() || "Unknown ingredient";
+        const normalizedName = normalizeIngredientName(originalName);
+        const quantity = ingredient.quantity?.trim();
 
-        if (existing) {
-          if (ingredient.quantity) {
-            existing.quantities.push(ingredient.quantity);
-          }
-        } else {
-          ingredientMap.set(ingredient.name, {
-            name: ingredient.name,
-            quantities: ingredient.quantity ? [ingredient.quantity] : [],
-          });
+        let entry = ingredientMap.get(normalizedName);
+
+        if (!entry) {
+          entry = {
+            name: originalName,
+            quantities: [],
+            totalsByUnit: new Map<string, number>(),
+            unparsedQuantities: [],
+            notes: [],
+          };
+
+          ingredientMap.set(normalizedName, entry);
+        }
+
+        if (!quantity) continue;
+ 
+        entry.quantities.push(quantity);
+ 
+        const parsed = parseQuantity(quantity);
+
+        if (!parsed.parseable || parsed.amount === null) {
+          entry.unparsedQuantities.push(quantity);
+          continue;
+        }
+
+        const unitKey = parsed.unit || "";
+ 
+        entry.totalsByUnit.set(
+          unitKey,
+          (entry.totalsByUnit.get(unitKey) ?? 0) + parsed.amount
+        );
+
+        if (parsed.qualifier) {
+          entry.notes.push(parsed.qualifier);
+        }
+ 
+        if (parsed.sizeText) {
+          entry.notes.push(parsed.sizeText);
+        }
+  
+        if (parsed.remainder) {
+          entry.notes.push(parsed.remainder);
         }
       }
     }
   }
 
-  return Array.from(ingredientMap.values()).map((item) => ({
-    name: item.name,
-    quantities: item.quantities,
-    totalQuantity:
-      item.quantities.length > 0 ? tryCombineQuantities(item.quantities) : null,
-  }));
+  return Array.from(ingredientMap.values()).map((item) => {
+    const combinedTotals = Array.from(item.totalsByUnit.entries()).map(
+      ([unit, amount]) => formatTotalQuantity(amount, unit)
+    );
+
+    const uniqueNotes = [...new Set(item.notes)];
+
+    return {
+      name: item.name,
+      quantities: item.quantities,
+      totalQuantity: combinedTotals.length > 0 ? combinedTotals.join(" + ") : null,
+      unparsedQuantities: item.unparsedQuantities,
+      notes: uniqueNotes,
+    };
+  });
 }
 
 export const generateWeeklyMenu = async (
