@@ -1,0 +1,1358 @@
+{
+  "info": {
+    "_postman_id": "cd4dc325-7716-4314-b282-6b35b45afc3f",
+    "name": "RecipeVault API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52165747",
+    "_collection_link": "https://go.postman.co/collection/52165747-cd4dc325-7716-4314-b282-6b35b45afc3f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Test get health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test recipe entry success",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Scrambled Eggs\",\r\n  \"description\": \"Soft and creamy scrambled eggs.\",\r\n  \"instructions\": [\r\n    \"Whisk eggs with salt.\",\r\n    \"Cook slowly in butter.\",\r\n    \"Stir gently until set.\",\r\n    \"Serve warm.\"\r\n  ],\r\n  \"mealTypes\": [\"breakfast\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test empty recipe entry fail",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test create ingredient duplicate fail",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Pepper\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/ingredients",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "ingredients"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test add ingredient to recipe",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"ingredientId\": \"{{Butter}}\",\r\n  \"quantity\": \"2 tbsp\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/dcfd0adf-7483-4b3a-abc2-d8f661d84112/ingredients",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "dcfd0adf-7483-4b3a-abc2-d8f661d84112",
+            "ingredients"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get all recipes",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get recipe by id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/recipes/{{Spaghetti Bolognese}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "{{Spaghetti Bolognese}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test remove ingredient",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/{{Spaghetti Bolognese}}/ingredients/{{Garlic}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "{{Spaghetti Bolognese}}",
+            "ingredients",
+            "{{Garlic}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get recipe by partial name",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/search?name=pan",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "pan"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get recipe by ingredient",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/search/ingredient?name=garlic",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "search",
+            "ingredient"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "garlic"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get recipe by ingredient all caps",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/search/ingredient?name=GARLIC",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "search",
+            "ingredient"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "GARLIC"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get recipe by ingredient fail no entry",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/recipes/search/ingredient",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "search",
+            "ingredient"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get recipe by ingredient partial",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/search/ingredient?name=gar",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "search",
+            "ingredient"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "gar"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get recipe by ingredient no match",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/search/ingredient?name=granite",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "search",
+            "ingredient"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "granite"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get random recipe",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/recipes/random",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "random"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test delete recipe",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/84dcb035-d327-455f-856f-05ce51751997",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "84dcb035-d327-455f-856f-05ce51751997"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test update ingredient quantity",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"quantity\": \"3 cloves\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/{{Spaghetti Bolognese}}/ingredients/{{Garlic}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "{{Spaghetti Bolognese}}",
+            "ingredients",
+            "{{Garlic}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test update recipe name",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Original Spaghettie Bolognese\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/{{Spaghetti Bolognese}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "{{Spaghetti Bolognese}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test update recipe name and instructions",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Original Spaghettie Bolognese\",\r\n    \"instructions\": [\"Boil\", \"Serve\"]\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/{{Spaghetti Bolognese}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "{{Spaghetti Bolognese}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test invalid recipe ID",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes/not-a-uuid",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes",
+            "not-a-uuid"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get ingredients",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Pepper\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/ingredients",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "ingredients"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get ingredient by ID",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Test create new ingredient",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Squash\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/ingredients",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "ingredients"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test delete ingredient",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Squash\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/ingredients/af09a581-e426-43a5-a814-01a87ca92ce6",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "ingredients",
+            "af09a581-e426-43a5-a814-01a87ca92ce6"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get first page of five recipes",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes?page=1&limit=5",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get second page of five recipes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/recipes?page=2&limit=5",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test sort by name ascending",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes?sortBy=name&order=asc",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes"
+          ],
+          "query": [
+            {
+              "key": "sortBy",
+              "value": "name"
+            },
+            {
+              "key": "order",
+              "value": "asc"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test sort by name descending",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes?sortBy=createdAt&order=desc",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes"
+          ],
+          "query": [
+            {
+              "key": "sortBy",
+              "value": "createdAt"
+            },
+            {
+              "key": "order",
+              "value": "desc"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test exceed item per page limit",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/recipes?limit=999",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "recipes"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "999"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test create user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"test1@example.com\",\r\n    \"password\": \"password234\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test login success",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"test1@example.com\",\r\n    \"password\": \"password234\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test login fail not a user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"fail@doesntexist.com\",\r\n    \"password\": \"password123\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test login fail wrong password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"test1@example.com\",\r\n    \"password\": \"password567\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test add recipe to favorites",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMzdhNDhjYi01NGFmLTQyYmItOTY4NS00ZTY2OGJiYTA0YmIiLCJpYXQiOjE3NzQ2MTMyMzMsImV4cCI6MTc3NTIxODAzM30.fZGzs78GefAGVrL4qKPcwOAdzxSZCR0zfFLGXSlQSbc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/favorites/4391341b-a163-46a4-bb43-7970f43f80a9",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "favorites",
+            "4391341b-a163-46a4-bb43-7970f43f80a9"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test get favorites",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMzdhNDhjYi01NGFmLTQyYmItOTY4NS00ZTY2OGJiYTA0YmIiLCJpYXQiOjE3NzQ2MTMyMzMsImV4cCI6MTc3NTIxODAzM30.fZGzs78GefAGVrL4qKPcwOAdzxSZCR0zfFLGXSlQSbc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"test1@example.com\",\r\n    \"password\": \"password567\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/favorites/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "favorites",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test remove recipe from favorites",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMzdhNDhjYi01NGFmLTQyYmItOTY4NS00ZTY2OGJiYTA0YmIiLCJpYXQiOjE3NzQ2MTMyMzMsImV4cCI6MTc3NTIxODAzM30.fZGzs78GefAGVrL4qKPcwOAdzxSZCR0zfFLGXSlQSbc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"test1@example.com\",\r\n    \"password\": \"password567\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/favorites/{{Spaghetti Bolognese}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "favorites",
+            "{{Spaghetti Bolognese}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test generate random meals for seven days",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMzdhNDhjYi01NGFmLTQyYmItOTY4NS00ZTY2OGJiYTA0YmIiLCJpYXQiOjE3NzQ2MTMyMzMsImV4cCI6MTc3NTIxODAzM30.fZGzs78GefAGVrL4qKPcwOAdzxSZCR0zfFLGXSlQSbc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"source\": \"all\",\r\n  \"days\": 7\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/menu/generate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "menu",
+            "generate"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test generate random meals from favorites",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMzdhNDhjYi01NGFmLTQyYmItOTY4NS00ZTY2OGJiYTA0YmIiLCJpYXQiOjE3NzQ2MTMyMzMsImV4cCI6MTc3NTIxODAzM30.fZGzs78GefAGVrL4qKPcwOAdzxSZCR0zfFLGXSlQSbc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"source\": \"favorites\",\r\n  \"days\": 7\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/menu/generate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "menu",
+            "generate"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "Spaghetti Bolognese",
+      "value": ""
+    },
+    {
+      "key": "Garlic",
+      "value": ""
+    },
+    {
+      "key": "Donuts",
+      "value": ""
+    },
+    {
+      "key": "Pudding",
+      "value": ""
+    },
+    {
+      "key": "Eggs",
+      "value": ""
+    },
+    {
+      "key": "Butter",
+      "value": ""
+    },
+    {
+      "key": "Milk",
+      "value": ""
+    },
+    {
+      "key": "Flour",
+      "value": ""
+    },
+    {
+      "key": "Sugar",
+      "value": ""
+    },
+    {
+      "key": "Bread",
+      "value": ""
+    },
+    {
+      "key": "Cheese",
+      "value": ""
+    },
+    {
+      "key": "ChickenBreast",
+      "value": ""
+    },
+    {
+      "key": "Onion",
+      "value": ""
+    },
+    {
+      "key": "Avocado",
+      "value": ""
+    },
+    {
+      "key": "OliveOil",
+      "value": ""
+    },
+    {
+      "key": "Lettuce",
+      "value": ""
+    },
+    {
+      "key": "TurkeyBreast",
+      "value": ""
+    },
+    {
+      "key": "Tomatoes",
+      "value": ""
+    },
+    {
+      "key": "Spaghetti",
+      "value": ""
+    },
+    {
+      "key": "GroundBeef",
+      "value": ""
+    },
+    {
+      "key": "BeefSteak",
+      "value": ""
+    },
+    {
+      "key": "Rice",
+      "value": ""
+    },
+    {
+      "key": "Salmon",
+      "value": ""
+    },
+    {
+      "key": "Potatoes",
+      "value": ""
+    },
+    {
+      "key": "Chocolate",
+      "value": ""
+    },
+    {
+      "key": "Apple",
+      "value": ""
+    }
+  ]
+}
