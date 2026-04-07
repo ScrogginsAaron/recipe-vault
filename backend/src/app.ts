@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import recipeRoutes from "./routes/recipe.routes";
 import ingredientRoutes from "./routes/ingredient.routes";
@@ -8,6 +9,12 @@ import menuRoutes from "./routes/menu.routes";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 
 app.use(express.json());
 
