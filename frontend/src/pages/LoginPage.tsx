@@ -24,11 +24,16 @@ export default function LoginPage() {
         password,
       });
 
-      const token = response.data.data.token;
-      const user = response.data.data.user;
+      const token = response.data?.data?.token;
+      const user = response.data?.data?.user;
+
+      if (!token) {
+        throw new Error("Token missing from login response");
+      }
 
       login(token, user);
       navigate("/weekly-menu");
+
     } catch (err) {
       console.error(err);
       setError("Login failed. Check your email and password.");
