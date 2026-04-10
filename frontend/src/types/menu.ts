@@ -24,6 +24,7 @@ export type Recipe = {
 
 export type MenuDay = {
   day: string;
+  date: string;
   meals: {
     breakfast: Recipe;
     lunch: Recipe;

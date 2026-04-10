@@ -1,4 +1,5 @@
 import prisma from "../config/prisma";
+import { Request, Response, NextFunction } from "express";
 
 const dayNames = [
   "Sunday",
@@ -328,6 +329,29 @@ function parseQuantity(quantity: string) {
   };
 }
 
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function parseLocalDate(dateString: string) {
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  const parsed = new Date(year, month - 1, day);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed;
+}
 
 function buildIngredientSummary(menu: any[]) {
   const ingredientMap = new Map<
@@ -422,8 +446,19 @@ export const generateWeeklyMenu = async (
   next: NextFunction
 ) => {
   try {
-    const { source, days = 7 } = req.body;
+    const { source, days = 7, startDate } = req.body;
     const userId = req.user!.id;
+
+    const parsedStartDate = startDate
+      ? parseLocalDate(startDate) 
+      : new Date();
+   
+    if (!parsedStartDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid startDate. Use YYYY-MM-DD format.",
+      });
+    }
 
     let recipes;
 
@@ -504,8 +539,12 @@ export const generateWeeklyMenu = async (
       const lunch = shuffledLunch[i % shuffledLunch.length];
       const dinner = shuffledDinner[i % shuffledDinner.length];
 
+      const currentDate = new Date(parsedStartDate);
+      currentDate.setDate(parsedStartDate.getDate() + i);
+
       menu.push({
-        day: dayNames[i % 7],
+        day: dayNames[currentDate.getDay()],
+        date: formatLocalDate(currentDate),
         meals: {
           breakfast: formatRecipe(breakfast),
           lunch: formatRecipe(lunch),
