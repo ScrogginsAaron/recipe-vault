@@ -1,12 +1,14 @@
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-import RecipesPage from "./pages/recipesPage";
+import RecipesPage from "./pages/RecipesPage";
 import WeeklyMenuPage from "./pages/WeeklyMenuPage";
 import RegisterPage from "./pages/RegisterPage";
 import PublicOnlyRoute from "./auth/PublicOnlyRoute";
+import logo from "./assets/recipe-vault-logo.png";
+import "./App.css";
 
 export default function App() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -18,31 +20,50 @@ export default function App() {
   }
 
   return (
-    <div>
-      <header style={{ padding: "1rem", borderBottom: "1px solid #ddd" }}>
-        <h1>RecipeVault</h1>
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="brand">
+          <img src={logo} alt="RecipeVault logo" className="brand-logo" />
+          <div>
+            <h1 className="brand-title">RecipeVault</h1>
+            <p className="brand-subtitle">Plan smarter, cook easier</p>
+          </div>
+        </div>
 
-        <nav style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <Link to="/">Home</Link>
-          <Link to="/recipes">Recipes</Link>
-          <Link to="/weekly-menu">Weekly Menu</Link>
+        <nav className="top-nav">
+          <NavLink to="/" className="nav-link">
+            Home
+          </NavLink>
+          <NavLink to="/recipes" className="nav-link">
+            Recipes
+          </NavLink>
+          <NavLink to="/weekly-menu" className="nav-link">
+            Weekly Menu
+          </NavLink>
+
           {!isAuthenticated ? (
             <>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
+              <NavLink to="/login" className="nav-link">
+                Login
+              </NavLink>
+              <NavLink to="/register" className="nav-link nav-button">
+                Register
+              </NavLink>
             </>
           ) : (
-            <>
-              <span>
+            <div className="auth-actions">
+              <span className="user-pill">
                 {user?.email ?? "Logged in"}
               </span>
-              <button onClick={handleLogout}>Logout</button>
-            </>
+              <button onClick={handleLogout} className="logout-button">
+                Logout
+              </button>
+            </div>
           )}
         </nav>
       </header>
 
-      <main style={{ padding: "1rem" }}>
+      <main className="app-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route 
