@@ -6,7 +6,11 @@ export default function PublicOnlyRoute({
 }: {
   children: JSX.Element;
 }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return <p>Loading session...</p>;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/weekly-menu" replace />;

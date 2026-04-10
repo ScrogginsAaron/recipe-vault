@@ -6,13 +6,14 @@ export default function WeeklyMenuPage() {
   const [data, setData] = useState<WeeklyMenuResponse["data"] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [source, setSource] = useState<"all" | "favorites">("all");
 
   async function handleGenerate() {
     try {
       setLoading(true);
       setError("");
  
-      const response = await generateWeeklyMenu("all", 7);
+      const response = await generateWeeklyMenu(source, 7);
       setData(response.data);
     } catch (err) {
       setError("Failed to generate weekly menu.");
@@ -26,15 +27,32 @@ export default function WeeklyMenuPage() {
     <section>
       <h2>Weekly Menu</h2>
 
-      <button onClick={handleGenerate} disabled={loading}>
-        {loading ? "Generating..." : "Generate Weekly Menu"}
-      </button>
-      
+
+      <div style={{ display: "grid", gap: "1rem", maxWidth: 400 }}>
+        <label>
+          Recipe source
+          <select
+            value={source}
+            onChange={(e) =>
+              setSource(e.target.value as "all" | "favorites")
+            }
+          >
+            <option value="all">All recipes</option>
+            <option value="favorites">Favorites only</option>
+          </select>
+        </label>
+
+        <button onClick={handleGenerate} disabled={loading}>
+          {loading ? "Generating..." : "Generate Weekly Menu"}
+        </button>
+      </div>
+   
       {error && <p>{error}</p>}
 
       {data && (
         <>
-          <h3>Menu</h3>
+          <h3 style={{ marginTop: "2rem" }}>Menu</h3>
+
           {data.menu.map((day) => (
             <div
               key={day.day}

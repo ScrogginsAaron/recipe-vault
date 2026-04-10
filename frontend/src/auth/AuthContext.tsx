@@ -1,15 +1,20 @@
-import { createContext, useContext, useMemo, useState } from "react";
-
-type AuthUser = {
-  id: string;
-  email: string;
-  createdAt: string;
-}
+import { 
+  createContext, 
+  useContext, 
+  useEffect,
+  useMemo, 
+  useState 
+} from "react";
+import {
+  getCurrentUser,
+  type AuthUser
+} from "../api/auth";
 
 type AuthContextType = {
   token: string | null;
-  user: AuthUser| null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
+  isAuthLoading: boolean;
   login: (token: string, user?: AuthUser) => void;
   logout: () => void;
 };
@@ -28,10 +33,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
   });  
+  const [isAuthLoading, setIsAuthLoading] = useState(Boolean(token));
 
-  function login(newToken: string, newUser?: unknown) {
+  useEffect(() => {
+    async function hydrateUser() {
+      if (!token) {
+        setIsAuthLoading(false);
+        return;
+      }
+
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      } catch (error) {
+        console.error("Failed to hydrate user:", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    }
+ 
+    hydrateUser();
+  }, [token]);
+
+  function login(newToken: string, newUser?: AuthUser) {
     localStorage.setItem("token", newToken);
     setToken(newToken);
+    setIsAuthLoading(false);
 
     if (newUser) {
       localStorage.setItem("user", JSON.stringify(newUser));
@@ -44,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
+    setIsAuthLoading(false);
   }
 
   const value = useMemo(
@@ -51,10 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       user,
       isAuthenticated: Boolean(token),
+      isAuthLoading,
       login,
       logout,
     }),
-    [token, user]
+    [token, user, isAuthLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
