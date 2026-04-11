@@ -60,6 +60,31 @@
   gap: 16px;
 }
 
+.meal-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.meal-pdf-button {
+  border: 1px solid #d6d3d1;
+  background: rgba(255, 255, 255, 0.92);
+  color: #374151;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.meal-pdf-button:hover {
+  background: white;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
 .control-group {
   display: flex;
   flex-direction: column;
@@ -73,6 +98,14 @@
 }
 
 .control-group select {
+  padding: 12px 14px;
+  border: 1px solid #d6d3d1;
+  border-radius: 14px;
+  font-size: 1rem;
+  background: white;
+}
+
+.control-group input[type="date"] {
   padding: 12px 14px;
   border: 1px solid #d6d3d1;
   border-radius: 14px;
@@ -102,6 +135,30 @@
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+}
+
+.secondary-button {
+  border: 1px solid #d6d3d1;
+  border-radius: 16px;
+  padding: 14px 18px;
+  background: white;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.secondary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .status-banner {
@@ -303,6 +360,11 @@
 @media (max-width: 640px) {
   .weekly-title {
     font-size: 1.6rem;
+  }
+
+  .meal-label-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .weekly-hero-copy,
