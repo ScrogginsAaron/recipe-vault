@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { generateWeeklyMenu } from "../api/menu";
+import { exportWeeklyMenuPdf } from "../utils/exportWeeklyPdf";
+import { exportRecipePdf } from "../utils/exportRecipePdf";
 import type { WeeklyMenuResponse } from "../types/menu";
 import "./WeeklyMenuPage.css";
 
@@ -104,6 +106,19 @@ export default function WeeklyMenuPage() {
           >
             {loading ? "Generating..." : "Generate Menu"}
           </button>
+
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={!data || loading}
+            onClick={() => {
+              if (data) {
+                exportWeeklyMenuPdf(data);
+              }
+            }}
+          >
+            Export PDF
+          </button>
         </div>
       </div>
 
@@ -179,17 +194,63 @@ export default function WeeklyMenuPage() {
                 <p className="day-date">{formatDisplayDate(day.date)}</p>
 
                 <div className="meal-block breakfast">
-                  <div className="meal-label">Breakfast</div>
+                  <div className="meal-label-row">
+                    <div className="meal-label">Breakfast</div>
+                    <button
+                      type="button"
+                      className="meal-pdf-button"
+                      onClick={() =>
+                        exportRecipePdf(day.meals.breakfast, {
+                          day: day.day,
+                          mealType: "breakfast",
+                          date: day.date,
+                        })
+                      }
+                    >
+                      Download PDF
+                    </button>
+                  </div>
                   <div className="meal-name">{day.meals.breakfast.name}</div>
                 </div>
 
                 <div className="meal-block lunch">
-                  <div className="meal-label">Lunch</div>
+                  <div className="meal-label-row">
+                    <div className="meal-label">Lunch</div>
+                    <button
+                      type="button"
+                      className="meal-pdf-button"
+                      onClick={() =>
+                        exportRecipePdf(day.meals.lunch, {
+                          day: day.day,
+                          mealType: "lunch",
+                          date: day.date,
+                        })
+                      }
+                    >
+                      Download PDF
+                    </button>
+                  </div>
                   <div className="meal-name">{day.meals.lunch.name}</div>
                 </div>
 
                 <div className="meal-block dinner">
-                  <div className="meal-label">Dinner</div>
+                  <div className="meal-label-row">
+                    <div className="meal-label">Dinner</div>
+                    <button
+                      type="button"
+                      className="meal-pdf-button"
+                      onClick={() =>
+                        exportRecipePdf(day.meals.dinner, {
+                          day: day.day,
+                          mealType: "dinner",
+                          date: day.date,
+                        })
+                      }
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+
                   <div className="meal-name">{day.meals.dinner.name}</div>
                 </div>
               </article>
