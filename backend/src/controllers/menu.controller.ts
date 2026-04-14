@@ -567,3 +567,111 @@ export const generateWeeklyMenu = async (
     next(err);
   }
 };
+
+export const rerollMenuRecipe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      source,
+      dayIndex,
+      mealType,
+      excludeRecipeId,
+      usedRecipeIds = [],
+      currentMenu,
+    } = req.body;
+
+    const userId = req.user!.id;
+
+    if (dayIndex < 0 || dayIndex >= currentMenu.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid dayIndex.",
+      });
+    }
+
+    let recipes;
+
+    if (source === "favorites") {
+      const favorites = await prisma.favorite.findMany({
+        where: { userId },
+        include: {
+          recipe: {
+            include: {
+              ingredients: {
+                include: {
+                  ingredient: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      recipes = favorites.map((favorite) => favorite.recipe);
+    } else {
+      recipes = await prisma.recipe.findMany({
+        include: {
+          ingredients: {
+            include: {
+              ingredient: true,
+            },
+          },
+        },
+      });
+    }
+
+    const excludedIds = new Set(
+      [excludeRecipeId, ...usedRecipeIds].filter(Boolean)
+    );
+
+    let candidates = recipes.filter(
+      (recipe) =>
+        recipe.mealTypes.includes(mealType) && !excludedIds.has(recipe.id)
+    );
+
+    if (candidates.length === 0) {
+      candidates = recipes.filter(
+        (recipe) =>
+          recipe.mealTypes.includes(mealType) && recipe.id !== excludeRecipeId
+      );
+    }
+
+    if (candidates.length === 0){
+      return res.status(400).json({
+        success: false,
+        message: `No alternative ${mealType} recipes available.`,
+      });
+    }
+  
+    const [selectedRecipe] = shuffleArray(candidates);
+    const formattedRecipe = formatRecipe(selectedRecipe);
+
+    const updatedMenu = currentMenu.map((day: any, index: number) => {
+      if (index !== dayIndex) return day;
+
+      return {
+        ...day,
+        meals: {
+          ...day.meals,
+          [mealType]: formattedRecipe,
+        },
+      };
+    });
+
+    const ingredientsSummary = buildIngredientSummary(updatedMenu);
+
+    return res.status(200).json({
+      success: true,
+      message: "Recipe rerolled successfully",
+      data: {
+        recipe: formattedRecipe,
+        ingredientsSummary,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
