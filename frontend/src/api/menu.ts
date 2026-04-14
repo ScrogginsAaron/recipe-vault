@@ -17,3 +17,23 @@ export async function generateWeeklyMenu(
   
   return response.data;
 }
+
+export async function rerollMenuRecipe(
+  source: "all" | "favorites",
+  dayIndex: number,
+  mealType: "breakfast" | "lunch" | "dinner",
+  excludeRecipeId: string,
+  usedRecipeIds: string[],
+  currentMenu: any[]
+) {
+  const response = await api.post("/menu/reroll", {
+    source,
+    dayIndex,
+    mealType,
+    excludeRecipeId,
+    usedRecipeIds,
+    currentMenu,
+  });
+
+  return response.data;
+}

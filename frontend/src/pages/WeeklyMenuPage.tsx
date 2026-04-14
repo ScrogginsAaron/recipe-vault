@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { generateWeeklyMenu } from "../api/menu";
+import { 
+  generateWeeklyMenu,
+  rerollMenuRecipe
+} from "../api/menu";
 import { exportWeeklyMenuPdf } from "../utils/exportWeeklyPdf";
 import { exportRecipePdf } from "../utils/exportRecipePdf";
 import type { WeeklyMenuResponse } from "../types/menu";
@@ -41,6 +44,62 @@ export default function WeeklyMenuPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleRerollRecipe(
+    dayIndex: number,
+    mealType: "breakfast" | "lunch" | "dinner"
+  ) {
+    if (!data) return;
+ 
+    try {
+      setError("");
+
+      const currentRecipe = data.menu[dayIndex].meals[mealType];
+
+      const usedRecipeIds = data.menu.flatMap((day) => [
+        day.meals.breakfast.id,
+        day.meals.lunch.id,
+        day.meals.dinner.id,
+      ]);
+
+      const response = await rerollMenuRecipe(
+        source,
+        dayIndex,
+        mealType,
+        currentRecipe.id,
+        usedRecipeIds,
+        data.menu
+      );
+
+      const newRecipe = response.data.recipe;
+      const newIngredientsSummary = response.data.ingredientsSummary;
+
+      setData((prev) => {
+        if (!prev) return prev;
+
+        const updatedMenu = prev.menu.map((day, index) => {
+          if (index !== dayIndex) return day;
+
+          return {
+            ...day,
+            meals: {
+              ...day.meals,
+              [mealType]: newRecipe,
+            },
+          };
+        });
+
+        return {
+          ...prev,
+          menu: updatedMenu,
+          ingredientsSummary: newIngredientsSummary,
+        };
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Failed to re-roll recipe.");
     }
   }
 
@@ -185,8 +244,8 @@ export default function WeeklyMenuPage() {
           </div>
 
           <div className="day-grid">
-            {data.menu.map((day) => (
-              <article key={day.day} className="day-card">
+            {data.menu.map((day, index) => (
+              <article key={`${day.date}-${day.day}`} className="day-card">
                 <div className="day-card-header">
                   <span className="day-badge">{day.day}</span>
                 </div>
@@ -196,6 +255,16 @@ export default function WeeklyMenuPage() {
                 <div className="meal-block breakfast">
                   <div className="meal-label-row">
                     <div className="meal-label">Breakfast</div>
+                  </div>
+                  <div className="meal-name">{day.meals.breakfast.name}</div>
+                  <div className="meal-actions">
+                    <button
+                      type="button"
+                      className="meal-action-button"
+                      onClick={() => handleRerollRecipe(index, "breakfast")}
+                    >
+                      Re-roll
+                    </button>
                     <button
                       type="button"
                       className="meal-pdf-button"
@@ -210,12 +279,21 @@ export default function WeeklyMenuPage() {
                       Download PDF
                     </button>
                   </div>
-                  <div className="meal-name">{day.meals.breakfast.name}</div>
                 </div>
 
                 <div className="meal-block lunch">
                   <div className="meal-label-row">
                     <div className="meal-label">Lunch</div>
+                  </div>
+                  <div className="meal-name">{day.meals.lunch.name}</div>
+                  <div className="meal-actions">
+                    <button
+                      type="button"
+                      className="meal-action-button"
+                      onClick={() => handleRerollRecipe(index, "lunch")}
+                    >
+                      Re-roll
+                    </button>
                     <button
                       type="button"
                       className="meal-pdf-button"
@@ -230,12 +308,22 @@ export default function WeeklyMenuPage() {
                       Download PDF
                     </button>
                   </div>
-                  <div className="meal-name">{day.meals.lunch.name}</div>
                 </div>
 
                 <div className="meal-block dinner">
                   <div className="meal-label-row">
                     <div className="meal-label">Dinner</div>
+                  </div>
+
+                  <div className="meal-name">{day.meals.dinner.name}</div>
+                  <div className="meal-actions">
+                    <button
+                      type="button"
+                      className="meal-action-button"
+                      onClick={() => handleRerollRecipe(index, "dinner")}
+                    >
+                      Re-roll
+                    </button>
                     <button
                       type="button"
                       className="meal-pdf-button"
@@ -250,8 +338,6 @@ export default function WeeklyMenuPage() {
                       Download PDF
                     </button>
                   </div>
-
-                  <div className="meal-name">{day.meals.dinner.name}</div>
                 </div>
               </article>
             ))}

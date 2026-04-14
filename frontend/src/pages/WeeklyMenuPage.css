@@ -137,6 +137,28 @@
   transform: none;
 }
 
+.meal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meal-action-button {
+  border: 1px solid #fed7aa
+  background: #fff7ed;
+  color: #c2410c;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.meal-action-button:hover {
+  background: #ffedd5;
+}
+
 .secondary-button {
   border: 1px solid #d6d3d1;
   border-radius: 16px;
