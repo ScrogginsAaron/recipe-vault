@@ -28,7 +28,7 @@ router.get(
 
 router.get(
   "/:id",
-  validate(ingredientIdParamsSchema, "params", getIngredientById),
+  validate(ingredientIdParamsSchema, "params"),
   getIngredientById
 );
 
