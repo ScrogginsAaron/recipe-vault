@@ -95,7 +95,7 @@ export const searchRecipesByName = async (req, res, next) => {
       },
     });
  
-    const formatted = recipes.map((recipe) => ({
+    const formattedRecipes = recipes.map((recipe) => ({
       id: recipe.id,
       name: recipe.name,
       description: recipe.description,
