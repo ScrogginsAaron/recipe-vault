@@ -9,6 +9,13 @@ import {
   searchRecipesByName,
   type Recipe,
 } from "../api/recipes";
+import {
+  addFavorite,
+  getFavorites,
+  removeFavorite,
+} from "../api/favorites";
+import RecipeDetailModal from "../components/RecipeDetailModal";
+import { useAuth } from "../auth/AuthContext";
 import "./RecipesPage.css";
 
 type SearchMode = "name" | "ingredient";
@@ -24,6 +31,8 @@ function formatDate(dateString: string) {
 }
 
 export default function RecipesPage() {
+  const { isAuthenticated } = useAuth();
+ 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,6 +40,10 @@ export default function RecipesPage() {
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const trimmedQuery = useMemo(() => query.trim(), [query]);
 
@@ -70,6 +83,45 @@ export default function RecipesPage() {
     setPage(1);
   }, [trimmedQuery, searchMode ]);
 
+  useEffect(() => {
+    async function loadFavorites() {
+      if (!isAuthenticated) {
+        setFavoriteIds([]);
+        return;
+      }
+
+      try {
+        const response = await getFavorites();
+        setFavoriteIds(response.data.map((recipe: Recipe) => recipe.id));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadFavorites();
+  }, [isAuthenticated]);
+
+  async function handleToggleFavorite(recipeId: string, isFavorite: boolean) {
+    if (!isAuthenticated) return;
+
+    try {
+      setFavoriteLoading(true);
+
+      if (isFavorite) {
+        await removeFavorite(recipeId);
+        setFavoriteIds((prev) => prev.filter((id) => id !== recipeId));
+      } else {
+        await addFavorite(recipeId);
+        setFavoriteIds((prev) => [...prev, recipeId]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to update favorite.");
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }
+
   return (
     <section className="recipes-page">
       <div className="recipes-hero">
@@ -77,7 +129,7 @@ export default function RecipesPage() {
           <span className="recipes-eyebrow">Recipe Library</span>
           <h2 className="recipes-title">Browse and search your recipes</h2>
           <p className="recipes-subtitle">
-            Search by recipe name or ingredient, then explore your saved recipe collection.
+            Search by recipe name or ingredient, then open any recipe to view full ingredients and instructions.
           </p>
         </div>
 
@@ -136,19 +188,32 @@ export default function RecipesPage() {
         <>
           <div className="recipe-grid">
             {recipes.map((recipe) => (
-              <article key={recipe.id} className="recipe-card">
+              <article 
+                key={recipe.id} 
+                className="recipe-card clickable"
+                onClick={() => setSelectedRecipe(recipe)}
+              >
                 <div className="recipe-card-header">
                   <h3>{recipe.name}</h3>
+                  <div className="recipe-card-header-right">
+                    {favoriteIds.includes(recipe.id) && (
+                      <span className="favorite-badge">★ Favorite</span>
+                    )}
+                  </div>
                 </div>
 
                 {recipe.description && (
                   <p className="recipe-description">{recipe.description}</p>
                 )}
                 
-                <div className="recipe-card-actions">
+                <div className="recipe-card-action">
                   <button 
                     type="button"
                     className="secondary-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedRecipe(recipe);
+                    }}
                   >
                     View Recipe
                   </button>
@@ -184,6 +249,18 @@ export default function RecipesPage() {
           )}
         </>
       )}
+
+    <RecipeDetailModal
+      recipe={selectedRecipe}
+      isOpen={!!selectedRecipe}
+      isFavorite={
+        selectedRecipe ? favoriteIds.includes(selectedRecipe.id) : false
+      }
+      favoriteLoading={favoriteLoading}
+      isAuthenticated={isAuthenticated}
+      onClose={() => setSelectedRecipe(null)}
+      onToggleFavorite={handleToggleFavorite}
+    />
     </section>
   );
 }
