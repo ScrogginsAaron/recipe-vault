@@ -3,7 +3,7 @@ import { api } from "./client";
 export type RecipeIngredient = {
   id: string;
   name: string;
-  quantity: string;
+  quantity: string | null;
 };
 
 export type Recipe = {
@@ -16,6 +16,18 @@ export type Recipe = {
   ingredients: RecipeIngredient[];
 };
 
+export type RecipePayload = {
+  name: string;
+  description?: string;
+  insructions?: string[];
+  mealTypes?: string[];
+}
+
+export type RecipeIngredientPayload = {
+  ingredientId: string;
+  quantity: string | null;
+};
+
 type RecipesResponse = {
   success: boolean;
   data: Recipe[];
@@ -25,6 +37,11 @@ type RecipesResponse = {
     limit: number;
     totalPages: number;
   };
+};
+
+type RecipeResponse = {
+  success: boolean;
+  data: Recipe;
 };
 
 export async function getRecipes(page = 1, limit = 12) {
@@ -48,5 +65,59 @@ export async function searchRecipesByIngredient(name: string) {
     params: { name },
   });
 
+  return response.data;
+}
+
+export async function createRecipe(payload: RecipePayload) {
+  const response = await api.post<RecipeResponse>("/recipes", payload);
+  return response.data;
+}
+
+export async function updateRecipe(
+  recipeId: string,
+  payload: Partial<RecipePayload>
+){
+  const response = await api.patch<RecipeResponse>(`/recipes/${recipeId}`, payload);
+  return response.data;
+}
+
+export async function deleteRecipe(recipeId: string) {
+  const response = await api.delete<{ 
+    success: boolean;
+    message: string
+  }>(
+    `/recipes/${recipeId}`
+  );
+  return response.data;
+}
+
+export async function attachIngredientToRecipe(
+  recipeId: string,
+  payload: RecipeIngredientPayload
+) {
+  const response = await api.post(
+    `/recipes/${recipeId}/ingredients`, 
+    payload
+  );
+  return response.data;
+}
+
+export async function updateRecipeIngredientQuantity(
+  recipeId: string,
+  ingredientId: string,
+  quantity: string
+) {
+  const response = await api.patch(
+    `/recipes/${recipeId}/ingredients/${ingredientId}`,
+    { quantity }
+  );
+  return response.data;
+}
+
+export async function removeIngredientFromRecipe(
+  recipeId: string,
+  ingredientId: string
+){
+  const response = await api.delete(`/recipes/${recipeId}/ingredients/${ingredientId}`);
   return response.data;
 }
