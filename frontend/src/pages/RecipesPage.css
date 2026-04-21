@@ -72,7 +72,7 @@
   padding: 12px 14px;
   border: 1px solid #d6d3d1;
   border-radius: 14px;
-  font-size 1rem;
+  font-size: 1rem;
   background: white;
 }
 
@@ -84,6 +84,37 @@
 
 .recipe-card {
   padding: 20px;
+}
+
+.recipe-card-actions-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.recipe-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-heading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.inline-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 180px auto;
+  gap: 12px;
 }
 
 .recipe-card-header {
@@ -111,6 +142,35 @@
   line-height: 1.5;
 }
 
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip-button {
+  border: 1px solid #d6d3d1;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.chip-button.selected {
+  background: #111827;
+  color: white;
+  border-color: #111827;
+}
+
+.danger-button {
+  background: #b91c1c;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
 .pagination-row {
   display: flex;
   justify-content: center;
@@ -121,6 +181,36 @@
 .pagination-text {
   color: #6b7280;
   font-weight: 600;
+}
+
+.primary-button {
+  border: none;
+  border-radius: 16px;
+  padding: 12px 18px;
+  background: #ea580c;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(234, 88, 12, 0.2);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.primary-button:hover {
+  background: #c2410c;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(194, 65, 12, 0.4);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 12px rgba(194, 65, 12, 0.3);
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .secondary-button {
@@ -139,8 +229,8 @@
   cursor: not-allowed;
 }
 
-empty-state,
-status-banner {
+.empty-state,
+.status-banner {
   padding: 24px;
 }
 
@@ -250,9 +340,16 @@ status-banner {
   margin-bottom: 20px;
 }
 
+.recipe-modal-actions-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
 .favorite-button {
   border: 1px solid #fed7aa;
-  background #fff7ed;
+  background: #fff7ed;
   color: #c2410c;
   border-radius: 999px;
   padding: 10px 14px;
@@ -309,6 +406,97 @@ status-banner {
   white-space: nowrap;
 }
 
+.recipe-form-modal {
+  max-width: 760px;
+  width: min(760px, 95vw);
+}
+
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.recipe-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-label {
+  font-weight: 600;
+}
+
+.text-input,
+.text-area {
+  width: 100%;
+  border: 1px solid #d6d3d1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  background: white;
+}
+
+.text-area {
+  resize: vertical;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip-button {
+  border: 1px solid #d6d3d1;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.chip-button.selected {
+  background: #111827;
+  color: white;
+  border-color: #111827;
+}
+
+.inline-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.stack-md {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.instruction-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.instruction-number {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.form-error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 @keyframes shimmer {
   0% {
     background-position: 200% 0;
@@ -320,6 +508,12 @@ status-banner {
 
 @media (max-width: 900px) {
   .recipes-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .inline-form-grid {
     grid-template-columns: 1fr;
   }
 }

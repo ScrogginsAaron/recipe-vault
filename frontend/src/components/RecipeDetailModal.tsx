@@ -1,18 +1,4 @@
-type Ingredient = {
-  id: string;
-  name: string;
-  quantity: string;
-};
-
-type Recipe = {
-  id: string;
-  name: string;
-  description?: string;
-  instructions?: string[];
-  mealTypes?: string[];
-  createdAt: string;
-  ingredients: Ingredient[];
-}
+import type { Recipe } from "../api/recipes";
 
 type Props = {
   recipe: Recipe | null;
@@ -20,8 +6,11 @@ type Props = {
   isFavorite: boolean;
   favoriteLoading: boolean;
   isAuthenticated: boolean;
+  deleteLoading?: boolean;
   onClose: () => void;
   onToggleFavorite: (recipeId: string, isFavorite: boolean) => void;
+  onEdit: (recipe: Recipe) => void;
+  onDelete: (recipe: Recipe) => void;
 };
 
 export default function RecipeDetailModal({
@@ -30,8 +19,11 @@ export default function RecipeDetailModal({
   isFavorite,
   favoriteLoading,
   isAuthenticated,
+  deleteLoading,
   onClose,
-  onToggleFavorite
+  onToggleFavorite,
+  onEdit,
+  onDelete,
 }: Props) {
   if (!isOpen || !recipe) return null;
 
@@ -57,7 +49,7 @@ export default function RecipeDetailModal({
           </button>
         </div>
 
-        <div className="recipe-modal-actions">
+        <div className="recipe-modal-actions recipe-modal-actions-wrap">
           {isAuthenticated && (
             <button
               type="button"
@@ -72,6 +64,23 @@ export default function RecipeDetailModal({
                 : "Add to Favorites"}
             </button>
           )}
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => onEdit(recipe)}
+          >
+            Edit Recipe
+          </button>
+
+          <button
+            type="button"
+            className="danger-button"
+            disabled={deleteLoading}
+            onClick={() => onDelete(recipe)}
+          >
+            {deleteLoading ? "Deleting..." : "Delete Recipe"}
+          </button>
         </div>
 
         <div className="recipe-modal-section">
