@@ -185,8 +185,8 @@ export default function RecipeFormModal({
     const normalizedIngredients = form.ingredients
       .map((ingredient) => ({
         ...ingredient,
-        name: ingredient.name.trim(),
-        quantity: ingredient.quantity.trim(),
+        name: ingredient.name.trim().toLowerCase(),
+        quantity: ingredient.quantity.trim().toLowerCase(),
       }))
       .filter((ingredient) => ingredient.name || ingredient.quantity);
 

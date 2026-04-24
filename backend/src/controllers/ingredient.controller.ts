@@ -1,6 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import prisma from "../config/prisma";
 
+// A helper function for finding an ingredient by ID.
+async function findIngredientById(id: string) {
+  return prisma.ingredient.findUnique({
+    where: { id },
+  });
+}
+
 export const createIngredient = async (
   req: Request,
   res: Response,
@@ -29,7 +36,12 @@ export const getIngredients = async (
   next: NextFunction
 ) => {
   try {
-    const ingredients = await prisma.ingredient.findMany();
+    const ingredients = await prisma.ingredient.findMany({
+      orderBy: {
+        name: "asc",
+      },
+    });
+
     res.status(200).json({
       success: true,
       message: "Ingredients retrieved successfully.",
@@ -48,9 +60,7 @@ export const getIngredientById = async (
   try {
     const { id } = req.params;
     
-    const ingredient = await prisma.ingredient.findUnique({
-      where: { id },
-    });
+    const ingredient = await findIngredientById(id);
 
     if (!ingredient) {
       return res.status(404).json({
@@ -78,9 +88,7 @@ export const updateIngredient = async (
     const { id } = req.params;
     const { name } = req.body;
 
-    const existingIngredient = await prisma.ingredient.findUnique({
-      where: { id },
-    });
+    const existingIngredient = await findIngredientById(id);
 
     if (!existingIngredient) {
       return res.status(404).json({
@@ -112,9 +120,7 @@ export const deleteIngredient = async (
   try {
     const { id } = req.params;
 
-    const existingIngredient = await prisma.ingredient.findUnique({
-      where: { id },
-    });
+    const existingIngredient = await findIngredientById(id);
 
     if (!existingIngredient) {
       return res.status(404).json({
@@ -123,6 +129,8 @@ export const deleteIngredient = async (
       });
     }
 
+    // Removes the recipe relationships before deleting the ingredients.
+    // Prevents relational constraint issues.
     await prisma.recipeIngredient.deleteMany({
       where: {
         ingredientId: id,

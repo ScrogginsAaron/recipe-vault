@@ -1,6 +1,51 @@
 import prisma from "../config/prisma";
+import type { NextFunction, Request, Response } from "express";
 
-export const createRecipe = async (req, res, next) => {
+const recipeInclude = {
+  ingredients: {
+    include: {
+      ingredient: true,
+    },
+  },
+};
+
+type RecipeWithIngredients = {
+  id: string;
+  name: string;
+  description: string | null;
+  instructions: string[];
+  mealTypes: string[];
+  createdAt: Date;
+  ingredients: Array<{
+    quantity: string | null;
+    ingredient: {
+      id: string;
+      name: string;
+    };
+  }>;
+};
+
+function formatRecipe(recipe: RecipeWithIngredients) {
+  return {
+    id: recipe.id,
+    name: recipe.name,
+    description: recipe.description,
+    instructions: recipe.instructions,
+    mealTypes: recipe.mealTypes,
+    createdAt: recipe.createdAt,
+    ingredients: recipe.ingredients?.map((recipeIngredient) => ({
+      id: recipeIngredient.ingredient.id,
+      name: recipeIngredient.ingredient.name,
+      quantity: recipeIngredient.quantity,
+    })) ?? [],
+  };
+}
+
+export const createRecipe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try{
     const { name, description, instructions, mealTypes } = req.body;
 
@@ -13,7 +58,7 @@ export const createRecipe = async (req, res, next) => {
       },
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Recipe created successfully",
       data: recipe,
@@ -28,13 +73,7 @@ export const getRecipeById = async (req, res, next) => {
     const { id } = req.params;
     const recipe = await prisma.recipe.findUnique({
       where: { id },
-      include: {
-        ingredients: {
-          include: {
-            ingredient: true
-          },
-        },
-      },
+      include: recipeInclude,
     });
     
     if (!recipe) {
@@ -43,22 +82,10 @@ export const getRecipeById = async (req, res, next) => {
         message: "Recipe not found" 
       });
     }
-    
-    const formattedRecipe = {
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      instructions: recipe.instructions,
-      mealTypes: recipe.mealTypes,
-      createdAt: recipe.createdAt,
-      ingredients: recipe.ingredients.map((ri) => ({
-        id: ri.ingredient.id,
-        name: ri.ingredient.name,
-        quantity: ri.quantity,
-     })),
-    };
+ 
+    formattedRecipe = formatRecipe(recipe);   
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Recipe retrieved successfully",
       data: formattedRecipe,
@@ -68,7 +95,11 @@ export const getRecipeById = async (req, res, next) => {
   }
 };
 
-export const searchRecipesByName = async (req, res, next) => {
+export const searchRecipesByName = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { name } = req.query;
 
@@ -82,33 +113,16 @@ export const searchRecipesByName = async (req, res, next) => {
     const recipes = await prisma.recipe.findMany({
       where: {
         name: {
-          contains: name,
+          contains: name.trim(),
           mode: "insensitive",
         },
       },
-      include: {
-        ingredients: {
-          include: {
-            ingredient: true,
-          },
-        },
-      },
+      include: recipeInclude,
     });
- 
-    const formattedRecipes = recipes.map((recipe) => ({
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      instructions: recipe.instructions,
-      mealTypes: recipe.mealTypes,
-      createdAt: recipe.createdAt,
-      ingredients: recipe.ingredients.map((ri) => ({
-        name: ri.ingredient.name,
-        quantity: ri.quantity,
-      })),
-    }));
+  
+    const formattedRecipes = recipes.map(formatRecipe);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Recipe(s) retrieved successfully.",
       data: formattedRecipes,
@@ -118,7 +132,11 @@ export const searchRecipesByName = async (req, res, next) => {
   }
 };
 
-export const searchRecipesByIngredient = async (req, res, next) => {
+export const searchRecipesByIngredient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { name } = req.query;
 
@@ -142,32 +160,14 @@ export const searchRecipesByIngredient = async (req, res, next) => {
           },
         },
       },
-      include: {
-        ingredients: {
-          include: {
-            ingredient: true,
-          },
-        },
-      },
+      include: recipeInclude,
       orderBy: {
         createdAt: "desc",
       },
     });
- 
-    const formattedRecipes = recipes.map((recipe) => ({
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      instructions: recipe.instructions,
-      mealTypes: recipe.mealTypes,
-      createdAt: recipe.createdAt,
-      ingredients: recipe.ingredients.map((ri) => ({
-        id: ri.ingredient.id,
-        name: ri.ingredient.name,
-        quantity: ri.quantity,
-      })),
-    }));
-  
+
+    const formattedRecipes = recipes.map(formatRecipe);
+    
     return res.status(200).json({
       success: true,
       message: "Recipe(s) retrieved successfully.",
@@ -178,7 +178,11 @@ export const searchRecipesByIngredient = async (req, res, next) => {
   }
 };
 
-export const getRandomRecipe = async (req, res, next) => {
+export const getRandomRecipe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const count = await prisma.recipe.count();
     
@@ -194,30 +198,12 @@ export const getRandomRecipe = async (req, res, next) => {
     const recipes = await prisma.recipe.findMany({
       skip: randomIndex,
       take: 1,
-      include: {
-        ingredients: {
-          include: {
-            ingredient: true,
-          },
-        },
-      },
+      include: recipeInclude,
     });
 
     const recipe = recipes[0];
 
-    const formattedRecipe = {
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      instructions: recipe.instructions,
-      mealTypes: recipe.mealTypes,
-      createdAt: recipe.createdAt,
-      ingredients: recipe.ingredients.map((ri) => ({
-        id: ri.ingredient.id,
-        name: ri.ingredient.name,
-        quantity: ri.quantity,
-      })),
-    };
+    const formattedRecipe = formatRecipe(recipe);
 
     return res.status(200).json({
       success: true,
@@ -229,55 +215,54 @@ export const getRandomRecipe = async (req, res, next) => {
   }
 };
 
-export const getRecipes = async (req, res, next) => {
+export const getRecipes = async (
+  req: Request, 
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const {
-      page = 1,
-      limit = 10,
+      page = "1",
+      limit = "10",
       sortBy = "createdAt",
       order = "desc",
     } = req.query;
 
-    const skip = (Number(page) -1) * Number(limit);
+    const validSortFields = ["createdAt", "name"] as const;
+    const validOrders = ["asc", "desc"] as const;
+
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const limitNumber = Math.max(1, Number(limit) || 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const safeSortBy = validSortFields.includes(
+      sortBy as (typeof validSortFields)[number]
+    )
+      ? sortBy
+      : "createdAt";
+
+    const safeOrder = validOrders.includes(order as (typeof validOrders)[number])
+      ? order
+      : "desc";
 
     const totalRecipes = await prisma.recipe.count();
 
     const recipes = await prisma.recipe.findMany({
       skip,
-      take: Number(limit),
+      take: limitNumber,
       orderBy: {
-        [sortBy]: order,
+        [safeSortBy as string]: safeOrder,
       },
-      include: {
-        ingredients: {
-          include: {
-            ingredient: true,
-          },
-        },
-      },
+      include: recipeInclude,
     });
 
-    const formattedRecipes = recipes.map((recipe) => ({
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      instructions: recipe.instructions,
-      createdAt: recipe.createdAt,
-      mealTypes: recipe.mealTypes,
-      ingredients: recipe.ingredients.map((ri) => ({
-        id: ri.ingredient.id,
-        name: ri.ingredient.name,
-        quantity: ri.quantity,
-      })),
-    }));
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      data: formattedRecipes,
+      data: recipes.map(formatRecipe),
       pagination: {
         total: totalRecipes,
-        page: Number(page),
-        limit: Number(limit),
+        page: pageNumber,
+        limit: limitNumber,
         totalPages: Math.ceil(totalRecipes / Number(limit)),
       },
     });
@@ -286,10 +271,52 @@ export const getRecipes = async (req, res, next) => {
   }
 };
 
-export const attachIngredientToRecipe = async (req, res, next) => {
+export const attachIngredientToRecipe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { ingredientId, quantity } = req.body;
+
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id },
+    });
+
+    if (!existingRecipe) {
+      return res.status(404).json({
+        success: false,
+        message: "Recipe not found",
+      });
+    }
+
+    const existingIngredient = await prisma.ingredient.findUnique({
+      where: { id: ingredientId },
+    });
+
+    if (!existingIngredient) {
+      return res.status(404).json({
+        success: false,
+        message: "Ingredient not found",
+      });
+    }
+
+    const existingRecipeIngredient = await prisma.recipeIngredient.findUnique({
+      where: {
+        recipeId_ingredientId: {
+          recipeId: id,
+          ingredientId,
+        }
+      }
+    });
+
+    if (existingRecipeIngredient) {
+      return res.status(409).json({
+        success: false,
+        message: "Ingredient already attached to this recipe",
+      });
+    }
 
     const recipeIngredient = await prisma.recipeIngredient.create({
       data: {
@@ -299,7 +326,7 @@ export const attachIngredientToRecipe = async (req, res, next) => {
       }
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Ingredient attached to recipe successfully",
       data: recipeIngredient,
@@ -309,9 +336,14 @@ export const attachIngredientToRecipe = async (req, res, next) => {
   }
 };
 
-export const removeIngredientFromRecipe = async (req, res, next) => {
+export const removeIngredientFromRecipe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id, ingredientId } = req.params;
+
     const existingRecipeIngredient = await prisma.recipeIngredient.findUnique({
       where: {
         recipeId_ingredientId: {
@@ -337,7 +369,7 @@ export const removeIngredientFromRecipe = async (req, res, next) => {
       },
     });
   
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Ingredient removed from recipe successfully",
     });
@@ -346,7 +378,11 @@ export const removeIngredientFromRecipe = async (req, res, next) => {
   }
 };
 
-export const deleteRecipe = async (req, res, next) => {
+export const deleteRecipe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
    
@@ -361,6 +397,7 @@ export const deleteRecipe = async (req, res, next) => {
       });
     }
 
+    // Remove related records first so that deleting the recipe doesn't fail due to relationships.
     await prisma.favorite.deleteMany({
       where: { recipeId: id },
     });
@@ -384,7 +421,11 @@ export const deleteRecipe = async (req, res, next) => {
   }
 };
 
-export const updateRecipeIngredientQuantity = async (req, res, next) => {
+export const updateRecipeIngredientQuantity = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id, ingredientId } = req.params;
     const { quantity } = req.body;
@@ -435,7 +476,11 @@ export const updateRecipeIngredientQuantity = async (req, res, next) => {
   }
 };
 
-export const updateRecipe = async (req, res, next) => {
+export const updateRecipe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { name, description, instructions, mealTypes } = req.body;
@@ -459,31 +504,13 @@ export const updateRecipe = async (req, res, next) => {
         ...(instructions !== undefined && { instructions }),
         ...(mealTypes !== undefined && { mealTypes }),
       },
-      include: {
-        ingredients: {
-          include: {
-            ingredient: true,
-          },
-        },
-      },
+      include: recipeInclude,
     });
 
     return res.status(200).json({
       success: true,
       message: "Recipe updated successfully",
-      data: {
-        id: updatedRecipe.id,
-        name: updatedRecipe.name,
-        description: updatedRecipe.description,
-        instructions: updatedRecipe.instructions,
-        mealTypes: updatedRecipe.mealTypes,
-        createdAt: updatedRecipe.createdAt,
-        ingredients: updatedRecipe.ingredients.map((ri) => ({
-          id: ri.ingredient.id,
-          name: ri.ingredient.name,
-          quantity: ri.quantity,
-        })),
-      },
+      data: formatRecipe(updatedRecipe),
     });
   } catch (err) {
     next(err);

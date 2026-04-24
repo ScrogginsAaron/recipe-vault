@@ -1,6 +1,23 @@
 import prisma from "../config/prisma";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateToken";
+import type {
+  NextFunction,
+  Request,
+  Response
+} from "express";
+  
+// Ensures that only safe fields are sent back to the client.
+function serializeUser(user: {
+  id: string;
+  email: string;
+  createdAt: Date }) {
+  return {
+    id: user.id,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
+}
 
 export const registerUser = async (
   req: Request,
@@ -10,6 +27,7 @@ export const registerUser = async (
   try {
     const { email, password } = req.body;
 
+    // Prevents multiple accounts from using the same email address.
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -21,6 +39,7 @@ export const registerUser = async (
       });
     }
 
+    // Stores a hashed password instead of a raw password for security.
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
@@ -36,11 +55,7 @@ export const registerUser = async (
       success: true,
       message: "User registered successfully",
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          createdAt: user.createdAt,
-        },
+        user: serializeUser(user),
         token,
       },
     });
@@ -61,6 +76,9 @@ export const loginUser = async (
       where: { email },
     });
 
+
+    // Using the same error message for both cases increases security by not letting the user
+    // know if a specific email exists in the system.
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -83,11 +101,7 @@ export const loginUser = async (
       success: true,
       message: "User logged in successfully",
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          createdAt: user.createdAt,
-        },
+        user: serializeUser(user),
         token,
       },
     });
@@ -108,6 +122,7 @@ export const getCurrentUser = async (
       where: { id: userId },
     });
 
+    // Whether the email already exists in the system.
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -118,11 +133,7 @@ export const getCurrentUser = async (
     return res.status(200).json({
       success: true,
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          createdAt: user.createdAt,
-        },
+        user: serializeUser(user),
       },
     });
   } catch (err) {
