@@ -1,332 +1,296 @@
 # RecipeVault
 
+RecipeVault is a full-stack meal planning and recipe management application designed to simplify recipe organization, weekly meal planning, and grocery preparation.
 
+Users can browse recipes, search by ingredient or recipe name, save favorites, generate multi-day meal plans, and view aggregated ingredient summaries for shopping preparation.
 
-RecipeVault is a backend-first full-stack application designed to store, search, and digitize cooking recipes.
+---
 
+## Features
 
+### Recipe Management
 
-The platform is being built to support:
+* Create, edit, and delete recipes
+* Add and manage recipe ingredients
+* Store recipe instructions and meal categories
+* Associate recipes with breakfast, lunch, and dinner meal types
 
-\- manual recipe entry
+### Search & Discovery
 
-\- weekly meal planning
+* Search recipes by recipe name
+* Search recipes by ingredient
+* Retrieve random recipe suggestions
 
-\- intelligent ingredient aggregation
+### Favorites System
 
+* Save favorite recipes
+* Generate meal plans using only favorited recipes
 
+### Weekly Meal Planning
 
-Future goals include PDF ingestion, OCR-based parsing of handwritten recipes, and exportable meal plan PDFs.
+* Generate multi-day meal plans
+* Automatically assign breakfast, lunch, and dinner meals
+* Re-roll individual meals without regenerating the full menu
+* Generate ingredient summaries across all meals
 
+### Ingredient Aggregation
 
+* Normalize ingredient quantities and units
+* Combine repeated ingredients into grocery-style summaries
 
-## Motivation
+### User Authentication
 
+* Register and log in users
+* Protected routes for authenticated actions
 
-
-Many recipes exist only as handwritten notes or scanned documents, making them difficult to organize
-and search. RecipeVault aims to preserve these recipes in a structured, searchable format while also
-providing practical tools such as meal planning and document export.
-
-
+---
 
 ## Tech Stack
 
+### Frontend
 
+* React
+* TypeScript
+* React Router
+* CSS
 
-* (Planned) Frontend: React, TypeScript
-* Backend: Node.js, Express, TypeScript
-* Database: PostgreSQL, Prisma
-* Authentication: JWT
-* Document Processing: PDF parsing, OCR
-* PDF Generation: (Planned) frontend export with optional server-side support
+### Backend
 
+* Node.js
+* Express
+* TypeScript
+* Prisma ORM
 
+### Database
 
-## Core Features
+* PostgreSQL
 
-* Weekly meal planning with manual or randomized recipe selection
-* Intelligent ingredient aggregation for grocery planning
-* Recipe listing and detail views
-* Search by recipe name or ingredient
-* User authentication and recipe ownership
+### Validation & Utilities
 
+* Zod
+* bcrypt
+* JWT authentication
 
-## Planned Features
+---
 
-* PDF recipe ingestion
-* OCR support for handwritten recipes
-* Export weekly meal plans as downloadable PDFs
-* Frontend application built with React and TypeScript
+## Screenshots
 
+### Home Page
 
-## 🌱 Seeding the Database
+<p align="center">
+  <img src="./screenshots/home-page.png" width="850" alt="RecipeVault home page" />
+</p>
 
-To populate sample data:
+The landing page introduces RecipeVault and provides quick access to recipe browsing and weekly meal planning.
 
-npx prisma db seed
+---
 
+### Recipes Page
 
-## Ingredient Aggregation System (Highlight)
+<p align="center">
+  <img src="./screenshots/recipe-page.png" width="850" alt="Recipes page" />
+</p>
 
+Browse recipes, search by name or ingredient, manage favorites, and access recipe management tools.
 
-One of the core challenges in RecipeVault is combining ingredient quantities across multiple recipes in a realistic way.
-This system was designed to simulate real-world messy data rather than ideal structured input.
+---
 
+### Add Recipe Modal
 
-The system supports:
+<p align="center">
+  <img src="./screenshots/add-recipe.png" width="700" alt="Add recipe modal" />
+</p>
 
-\- fractions (`1/2`, `1 1/2`)
+Create and edit recipes with ingredients, meal types, and cooking instructions.
 
-\- decimals (`1.5`)
+---
 
-\- ranges (`1-2 cloves`)
+### Weekly Menu Planner
 
-\- unit normalization (`cups` → `cup`, `tbsp` → `tablespoon`)
+<p align="center">
+  <img src="./screenshots/weekly-menu.png" width="850" alt="Weekly meal planner" />
+</p>
 
-\- descriptor handling (`2 large eggs`)
+Generate multi-day meal plans, reroll meals dynamically, and review aggregated ingredient summaries for shopping preparation.
 
-\- package parsing (`1 (14 oz) can tomatoes`)
-
-
-
-Instead of failing on inconsistent data, the system:
-
-\- aggregates compatible quantities
-
-\- preserves unparseable values like `to taste`
-
-\- extracts useful metadata (size, descriptors)
-
-
-
-This reflects real-world data challenges where inputs are inconsistent and require flexible parsing.
-
-
-
-## Weekly Meal Planning
-
-Users can generate a weekly meal plan in one of two ways:
-
-* **Manual selection** of recipes for each day
-* **Randomized selection** from all recipes or user-favorited recipes
-
-Generated meal plans include:
-
-* daily recipe assignments
-* aggregated ingredient summaries for grocery planning
-
-
-
-PDF export is planned as a future feature.
-
-
-
-## Architecture Overview
-
-RecipeVault follows a modular full-stack architecture:
-(Planned) Frontend (React + TypeScript)
-|
-| REST API
-v
-Backend (Node.js + Express)
-|
-| Prisma ORM
-v
-PostgreSQL Database
-
-
-
-## Backend Architecture
-
-
-
-The backend follows a layered Express architecture:
-
-
-
-* **Routes** - Define API endpoints and apply middleware
-* **Middleware** - Reusable validation and error handling
-* **Controllers** - Business logic and database interaction
-* **Validators** - Zod schemas for request validation
-* **Config** - Infrastructure setup (Prisma client)
-
-
-
-Validation is handled using **Zod**, ensuring runtime safety and structured error responses.
-
-
-
-Errors are processed through a centralized error handler to maintain consistent API responses.
-
-
-
-## API Design Principles
-
-
-
-* Schema-based validation using Zod
-* Centralized error handling middleware
-* RESTful route structure
-* Consistent JSON error responses
-* Separation of configuration, routing, and business logic
-
-
+---
 
 ## Project Structure
 
+```txt
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── api/
+│   └── styles/
 
+backend/
+├── src/
+│   ├── controllers/
+│   ├── routes/
+│   ├── middleware/
+│   ├── validators/
+│   └── config/
+```
 
-src/
+---
 
-   app.ts
+## Getting Started
 
-   server.ts
+### Prerequisites
 
-   routes/
+* Node.js
+* PostgreSQL
+* npm
 
-   controllers/
+---
 
-   validators/
+## Installation
 
-   middleware/
+### Clone the repository
 
-   config/
+```bash
+git clone <your-repository-url>
+cd recipe-vault
+```
 
+---
 
+### Backend Setup
 
-### Document \& PDF Processing Flow
+```bash
+cd backend
+npm install
+```
 
+Create a `.env` file:
 
+```env
+DATABASE_URL=your_database_url
+JWT_SECRET=your_jwt_secret
+PORT=3000
+```
 
-User Upload
-↓
-Upload Service
-↓
-PDF / OCR Parsing
-↓
-Structured Recipe Draft
-↓
-User Review \& Save
+Run Prisma migrations:
 
+```bash
+npx prisma migrate dev
+```
 
+Start the backend server:
 
-### Meal Plan PDF Generation Flow
+```bash
+npm run dev
+```
 
+---
 
+### Frontend Setup
 
-Meal Plan Request
-↓
-Meal Plan Service (selection logic)
-↓
-PDF Generation Service
-↓
-PDF Response to Client
+```bash
+cd frontend
+npm install
+```
 
+Start the frontend:
 
+```bash
+npm run dev
+```
 
-### Example: Create Recipe
+---
 
+## API Overview
 
+### Recipes
 
+```http
+GET /recipes
 POST /recipes
+GET /recipes/:id
+PATCH /recipes/:id
+DELETE /recipes/:id
+```
 
+### Recipe Search
 
+```http
+GET /recipes/search?name=
+GET /recipes/search-by-ingredient?name=
+```
 
-Request:
+### Favorites
 
+```http
+POST /favorites/:recipeId
+DELETE /favorites/:recipeId
+GET /favorites
+```
+
+### Weekly Menu
+
+```http
+POST /weekly-menu/generate
+POST /weekly-menu/reroll
+```
+
+---
+
+## Example Recipe Payload
+
+```json
 {
-
-  "name": "Spaghetti Bolognese"
-
+  "name": "Chicken Soup",
+  "description": "Simple homemade soup",
+  "mealTypes": ["dinner"],
+  "instructions": [
+    "Boil broth",
+    "Add chicken",
+    "Simmer for 20 minutes"
+  ]
 }
+```
 
+---
 
+## Key Technical Challenges
 
-Response:
+### Ingredient Normalization
 
+Implemented quantity parsing and unit normalization logic to combine ingredient quantities across multiple recipes into aggregated shopping summaries.
 
+### Relational Data Handling
 
-201 Created
+Managed many-to-many relationships between recipes and ingredients using Prisma relational models.
 
+### Dynamic Meal Planning
 
+Built meal generation and reroll logic that dynamically rotates and reuses recipes when recipe counts are limited.
 
-{
+---
 
-  "id": "uuid",
+## Future Improvements
 
-  "name": "Spaghetti Bolognese",
+* Drag-and-drop meal planning
+* Nutritional information support
+* Recipe image uploads
+* Shared meal plans
+* Shopping list export improvements
+* Automated grocery categorization
 
-  "createdAt": "timestamp"
+---
 
-}
+## Development Notes
 
+This project was built using an iterative development process that combined hands-on debugging, refactoring, and AI-assisted development workflows to accelerate feature implementation while maintaining active involvement in architecture decisions, testing, and code validation.
 
+---
 
-### Example: Create Recipe Error Response
+## Author
 
+Aaron Scroggins
 
+GitHub: https://github.com/ScrogginsAaron
 
-400 Bad Request
-
-
-
-{
-
-  "error": "Invalid request body",
-
-  "fields": {
-
-    "name": {
-
-      "message": "Recipe name is required"
-
-    }
-
-  }
-
-}
-
-## 🧪 API Testing (Postman)
-
-A Postman collection is included in `/postman` for testing all endpoints.
-
-To use:
-1. Import the collection into Postman
-2. Set your base URL (e.g., `http://localhost:3000`)
-
-## Status
-
-
-
-✅ Backend complete and ready for use
-
-🔜 Frontend coming next
-
-
-
-## Goals
-
-
-
-* Demonstrate full-stack application design
-* Work with structured and unstructured data
-* Apply OCR and document-processing techniques in a production-style workflow
-* Build a practical, user-focused feature set
-
-
-
-## What I’m Learning
-
-
-
-\- Designing modular backend architecture with Express
-
-\- Handling structured and unstructured data
-
-\- Building resilient parsing systems for inconsistent inputs
-
-\- Using Prisma for type-safe database access
-
-\- Designing APIs before building a frontend
-
+LinkedIn: https://linkedin.com/in/aaron-scroggins-a8b04a330
