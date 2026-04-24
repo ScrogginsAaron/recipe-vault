@@ -1,32 +1,119 @@
 import prisma from "../config/prisma";
-import { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
 
-const dayNames = [
+const recipeInclude = {
+  ingredients: {
+    include: {
+      ingredient: true,
+    },
+  },
+};
+
+const DAY_NAMES = [
   "Sunday",
   "Monday",
   "Tuesday",
   "Wednesday",
   "Thursday",
   "Friday",
-  "Saturday"
-];
+  "Saturday",
+] as const;
 
+const VALID_MEAL_TYPES = [
+  "breakfast",
+  "lunch",
+  "dinner",
+] as const;
+
+// Allows normalized units to be correctly detected during parsing.
+const KNOWN_UNITS = new Set([
+  "cup",
+  "tablespoon",
+  "teaspoon",
+  "ounce",
+  "fluid ounce",
+  "pound",
+  "gram",
+  "kilogram",
+  "milliliter",
+  "leaf",
+  "liter",
+  "clove",
+  "slice",
+  "can",
+  "package",
+  "bag",
+  "bunch",
+  "stick",
+  "piece",
+  "egg",
+  "filet",
+  "fillet",
+  "jar",
+  "bottle",
+  "pinch",
+  "dash",
+]);
+
+const DESCRIPTOR_WORDS = new Set([
+  "small",
+  "medium",
+  "large",
+  "extra-large",
+  "extra",
+]);
+
+type RecipeWithIngredients = {
+  id: string;
+  name: string;
+  description: string | null;
+  instructions: string[];
+  mealTypes: string[];
+  createdAt: Date;
+
+  ingredients: Array<{
+    quantity: string | null;
+
+    ingredient: {
+      id: string;
+      name: string;
+    };
+  }>;
+};
+
+type FormattedRecipe = ReturnType<typeof formatRecipe>;
+
+type WeeklyMenuDay = {
+  day: string;
+  date: string;
+
+  meals: {
+    breakfast: FormattedRecipe;
+    lunch: FormattedRecipe;
+    dinner: FormattedRecipe;
+  };
+};
+
+// Shuffles arrays so they don't feel as repetitive.
 function shuffleArray<T>(array: T[]): T[] {
   const copy = [...array];
 
   for (let i = copy.length -1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
+
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
 
   return copy;
 }
 
+// Normalizes ingredient names for consistent grouping.
 function normalizeIngredientName(name: string): string {
   return name.trim().toLowerCase();
 }
 
-function formatRecipe(recipe: any) {
+// Transforms the recipe data into the form used by the front end.
+function formatRecipe(recipe: RecipeWithIngredients) {
   return {
     id: recipe.id,
     name: recipe.name,
@@ -34,96 +121,167 @@ function formatRecipe(recipe: any) {
     instructions: recipe.instructions,
     mealTypes: recipe.mealTypes,
     createdAt: recipe.createdAt,
-    ingredients: recipe.ingredients.map((ri) => ({
-      id: ri.ingredient.id,
-      name: ri.ingredient.name,
-      quantity: ri.quantity,
+
+    ingredients: recipe.ingredients.map((recipeIngredient) => ({
+      id: recipeIngredient.ingredient.id,
+      name: recipeIngredient.ingredient.name,
+      quantity: recipeIngredient.quantity,
     })),
   };
 }
 
+// Retrieves recipes from either all or favorited recipes.
+async function getRecipePool(
+  source: string,
+  userId: string
+): Promise<RecipeWithIngredients[]> {
+  if (source === "favorites") {
+    const favorites = await prisma.favorite.findMany({
+      where: { userId },
+      
+      include: {
+        recipe: {
+          include: recipeInclude,
+        },
+      },
+    });
+  
+    return favorites.map(
+      (favorite) => favorite.recipe
+    ) as RecipeWithIngredients[];
+  }
+
+  return prisma.recipe.findMany({
+    include: recipeInclude,
+  }) as Promise<RecipeWithIngredients[]>;
+}
+
+/**
+ * Normalize measurement units so quantities can be combined.
+ * Example:
+ * - cups -> cup
+ * - tbsp -> tablespoon
+ */
 function normalizeUnit(unit: string): string {
-  const u = unit.trim().toLowerCase();
+  const normalizedUnit = unit.trim().toLowerCase();
 
   const unitMap: Record<string, string> = {
     cup: "cup",
     cups: "cup",
+
     tbsp: "tablespoon",
     tablespoon: "tablespoon",
     tablespoons: "tablespoon",
+
     tsp: "teaspoon",
     teaspoon: "teaspoon",
     teaspoons: "teaspoon",
+
     oz: "ounce",
     ounce: "ounce",
     ounces: "ounce",
+
     fl: "fluid ounce",
     "fl oz": "fluid ounce",
     "fluid ounce": "fluid ounce",
     "fluid ounces": "fluid ounce",
+
     lb: "pound",
     lbs: "pound",
     pound: "pound",
     pounds: "pound",
+
     g: "gram",
     gram: "gram",
     grams: "gram",
+
     kg: "kilogram",
     kilogram: "kilogram",
     kilograms: "kilogram",
+
     ml: "milliliter",
     milliliter: "milliliter",
     milliliters: "milliliter",
+
     leaf: "leaf",
     leaves: "leaf",
+
     l: "liter",
     liter: "liter",
     liters: "liter",
+
     clove: "clove",
     cloves: "clove",
+
     slice: "slice",
     slices: "slice",
+
     can: "can",
     cans: "can",
+
     package: "package",
     packages: "package",
     pkg: "package",
+
     bag: "bag",
     bags: "bag",
+
     bunch: "bunch",
     bunches: "bunch",
+
     stick: "stick",
     sticks: "stick",
+
     piece: "piece",
     pieces: "piece",
+
     egg: "egg",
     eggs: "egg",
+
     filet: "filet",
     filets: "filet",
+
     fillet: "fillet",
     fillets: "fillet",
+
     jar: "jar",
     jars: "jar",
+
     bottle: "bottle",
     bottles: "bottle",
+
     pinch: "pinch",
     pinches: "pinch",
+
     dash: "dash",
     dashes: "dash",
   };
 
-  return unitMap[u] ?? u;
+  return unitMap[normalizedUnit] ?? normalizedUnit;
 }
 
+/**
+ * Converts quantity text into a numeric value.
+ * Supports:
+ * - 1
+ * - 1.5
+ * - 1/2
+ * - 1 1/2
+ */
 function parseAmountToken(amountText: string): number | null {
   const text = amountText.trim();
 
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
   if (/^\d+\s+\d+\/\d+$/.test(text)) {
     const [whole, fraction] = text.split(/\s+/);
     const [num, den] = fraction.split("/");
-    return Number(whole) + Number(num) / Number(den);
+    return (
+      Number(whole) + 
+      Number(num) / Number(den)
+    );
   }
 
   if (/^\d+\/\d+$/.test(text)) {
@@ -143,10 +301,16 @@ function parseAmountToken(amountText: string): number | null {
 function formatTotalQuantity(amount: number, unit: string) {
   const rounded = Number(amount.toFixed(2));
 
-  if (!unit) return `${rounded}`;
+  if (!unit) {
+    return `${rounded}`;
+  }
   return `${rounded} ${unit}`;
 }
 
+/**
+ * Parse ingredient quantities into a structured data
+ * so quantities can be combined into shopping totals.
+ */
 function parseQuantity(quantity: string) {
   const raw = quantity.trim();
 
@@ -158,17 +322,22 @@ function parseQuantity(quantity: string) {
       qualifier: "",
       sizeText: "",
       displayUnit: "",
+      remainder: "",
       parseable: false,
     };
   }
 
   const normalized = raw
-    .replace(/-/g, "-")
-    .replace(/-/g, "-")
+    .replace(/[–—]/g, "-")
     .replace(/\s+/g, " ")
     .trim();
 
-  if (/^(to taste|as needed|for garnish|optional)$/i.test(normalized)) {
+  // Handle non-measurable quantities.
+  if (
+    /^(to taste|as needed|for garnish|optional)$/i.test(
+      normalized
+    )
+  ) {
     return {
       raw: quantity,
       amount: null,
@@ -176,6 +345,7 @@ function parseQuantity(quantity: string) {
       qualifier: normalized.toLowerCase(),
       sizeText: "",
       displayUnit: "",
+      remainder: "",
       parseable: false,
     };
   }
@@ -192,13 +362,14 @@ function parseQuantity(quantity: string) {
       qualifier: "",
       sizeText: "",
       displayUnit: "",
+      remainder: "",
       parseable: false,
     };
   }
 
   const startAmount = parseAmountToken(amountMatch[1]);
   const endAmount = amountMatch[2] ? parseAmountToken(amountMatch[2]) : null;
-  const remainder = (amountMatch[3] ?? "").trim();
+  const remainderText = (amountMatch[3] ?? "").trim();
 
   if (startAmount === null) {
     return {
@@ -208,114 +379,111 @@ function parseQuantity(quantity: string) {
       qualifier: "",
       sizeText: "",
       displayUnit: "",
+      remainder: "",
       parseable: false,
     };
   }
 
+  /**
+   * Use the upper range when parsing ranges.
+   * Example:
+   * 1-2 cups -> 2 cups
+   */
   const amount =
     endAmount !== null ? endAmount : startAmount;
 
-  let rest = remainder;
+  let remainingText = remainderText;
+
   let sizeText = "";
   let qualifier = "";
-  
-  const parenMatches = [...rest.matchAll(/\(([^)]+)\)/g)];
-  if (parenMatches.length > 0) {
-    sizeText = parenMatches.map((m) => m[1].trim()).join(", ");
-    rest = rest.replace(/\(([^)]+)\)/g, "").replace(/\s+/g, " ").trim();
+
+  /**
+   * Extract parenthetical size details.
+   * Example:
+   * 2 cans (14 oz each)
+   */
+  const parentheticalMatches = [
+    ...remainingText.matchAll(
+      /\(([^)]+)\)/g
+    ),
+  ];
+
+  if (parentheticalMatches.length > 0) {
+    sizeText = parentheticalMatches
+      .map((match) => match[1].trim())
+      .join(", ");
+ 
+    remainingText = remainingText
+      .replace(/\(([^)]+)\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
-  const tokens = rest.split(/\s+/).filter(Boolean);
+  const tokens = remainingText
+    .split(/\s+/)
+    .filter(Boolean);
 
-  const candidateUnitLengths = [2, 1];
   let detectedUnit = "";
   let consumedTokenCount = 0;
 
-  for (const len of candidateUnitLengths) {
-    const phrase = tokens.slice(0, len).join(" ").toLowerCase();
+
+  /**
+   * Attempt to detect multi-word units first.
+   * Example:
+   * "fluid ounce"
+   */
+  for (const len of [2, 1]) {
+    const phrase = tokens
+      .slice(0, len)
+      .join(" ")
+      .toLowerCase();
+
     const normalizedPhrase = normalizeUnit(phrase);
 
-    if (phrase && normalizedPhrase !== phrase) {
+    if (
+      phrase && 
+      KNOWN_UNITS.has(normalizedPhrase)
+    ) {
       detectedUnit = normalizedPhrase;
       consumedTokenCount = len;
-      break;
-    }
 
-    const knownSingleOrPhraseUnits = new Set([
-      "cup",
-      "tablespoon",
-      "teaspoon",
-      "ounce",
-      "fluid ounce",
-      "pound",
-      "gram",
-      "kilogram",
-      "milliliter",
-      "leaf",
-      "liter",
-      "clove",
-      "slice",
-      "can",
-      "package",
-      "bag",
-      "bunch",
-      "stick",
-      "piece",
-      "egg",
-      "filet",
-      "fillet",
-      "jar",
-      "bottle",
-      "pinch",
-      "dash",
-    ]);
-
-    if (knownSingleOrPhraseUnits.has(normalizedPhrase)) {
-      detectedUnit = normalizedPhrase;
-      consumedTokenCount = len;
       break;
     }
   }
 
-  if (!detectedUnit && tokens.length > 0) {
-    const first = tokens[0].toLowerCase();
-    const descriptorWords = new Set([
-      "small",
-      "medium",
-      "large",
-      "extra-large",
-      "extra",
-    ]);
+  /**
+  * Handle descriptor-based quantities.
+  * Example:
+  * "2 large eggs"
+  */
+  if (
+    !detectedUnit &&
+    tokens.length > 1
+  ) {
+    const firstToken = tokens[0].toLowerCase();
 
-    if (descriptorWords.has(first) && tokens.length > 1) {
-      const next = normalizeUnit(tokens[1].toLowerCase());
+    if (
+      DESCRIPTOR_WORDS.has(firstToken)
+    ) {
+      const nextToken = 
+        normalizeUnit(
+          tokens[1].toLowerCase()
+        );
+
       if (
-        [
-          "egg",
-          "clove",
-          "slice",
-          "can",
-          "package",
-          "bag",
-          "bunch",
-          "leaf",
-          "stick",
-          "piece",
-          "filet",
-          "fillet",
-          "jar",
-          "bottle",
-        ].includes(next)
+        KNOWN_UNITS.has(nextToken)
       ) {
-        qualifier = first;
-        detectedUnit = next;
+        qualifier = firstToken;
+        detectedUnit = nextToken;
         consumedTokenCount = 2;
       }
     }
   }
         
-  const leftover = tokens.slice(consumedTokenCount).join(" ").trim();
-  const displayUnit = detectedUnit || "";
+  const remainder = tokens
+    .slice(consumedTokenCount)
+    .join(" ")
+    .trim();
 
   return {
     raw: quantity,
@@ -323,37 +491,52 @@ function parseQuantity(quantity: string) {
     unit: detectedUnit,
     qualifier,
     sizeText,
-    displayUnit,
-    remainder: leftover,
+    displayUnit: detectedUnit,
+    remainder,
     parseable: true,
   };
 }
 
 function formatLocalDate(date: Date) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+
+  const month = String(
+    date.getMonth() + 1
+    ).padStart(2, "0");
+
+  const day = String(
+    date.getDate()
+    ).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
 
 function parseLocalDate(dateString: string) {
-  const [year, month, day] = dateString.split("-").map(Number);
+  const [year, month, day] = 
+    dateString.split("-").map(Number);
 
   if (!year || !month || !day) {
     return null;
   }
 
-  const parsed = new Date(year, month - 1, day);
+  const parsedDate = new Date(
+    year,
+    month - 1, 
+    day
+  );
 
-  if (Number.isNaN(parsed.getTime())) {
+  if (Number.isNaN(parsedDate.getTime())) {
     return null;
   }
 
-  return parsed;
+  return parsedDate;
 }
 
-function buildIngredientSummary(menu: any[]) {
+/**
+ * Combine ingredients across all meals
+ * into a grocery-style shopping summary.
+ */
+function buildIngredientSummary(menu: WeeklyMenuDay[]) {
   const ingredientMap = new Map<
     string,
     { 
@@ -366,15 +549,15 @@ function buildIngredientSummary(menu: any[]) {
   >();
   
   for (const day of menu) {
-    for (const mealKey of ["breakfast", "lunch", "dinner"] as const) {
-      const recipe = day.meals[mealKey];
-    
-      if (!recipe) continue;
+    for (const mealType of VALID_MEAL_TYPES) {
+      const recipe = day.meals[mealType];
 
       for (const ingredient of recipe.ingredients) {
-        const originalName = ingredient.name?.trim() || "Unknown ingredient";
+        const originalName = 
+          ingredient.name?.trim() ||
+          "Unknown ingredient";
+
         const normalizedName = normalizeIngredientName(originalName);
-        const quantity = ingredient.quantity?.trim();
 
         let entry = ingredientMap.get(normalizedName);
 
@@ -390,14 +573,19 @@ function buildIngredientSummary(menu: any[]) {
           ingredientMap.set(normalizedName, entry);
         }
 
-        if (!quantity) continue;
- 
+        const quantity = ingredient.quantity?.trim();
+
+        if (!quantity){
+          continue;
+        }
+
         entry.quantities.push(quantity);
  
         const parsed = parseQuantity(quantity);
 
         if (!parsed.parseable || parsed.amount === null) {
           entry.unparsedQuantities.push(quantity);
+
           continue;
         }
 
@@ -409,32 +597,46 @@ function buildIngredientSummary(menu: any[]) {
         );
 
         if (parsed.qualifier) {
-          entry.notes.push(parsed.qualifier);
+          entry
+          .notes
+          .push(parsed.qualifier);
         }
  
         if (parsed.sizeText) {
-          entry.notes.push(parsed.sizeText);
+          entry
+          .notes
+          .push(parsed.sizeText);
         }
   
         if (parsed.remainder) {
-          entry.notes.push(parsed.remainder);
+          entry
+          .notes
+          .push(parsed.remainder);
         }
       }
     }
   }
 
-  return Array.from(ingredientMap.values()).map((item) => {
-    const combinedTotals = Array.from(item.totalsByUnit.entries()).map(
-      ([unit, amount]) => formatTotalQuantity(amount, unit)
+  return Array.from(
+    ingredientMap.values()
+  ).map((ingredient) => {
+    const combinedTotals = Array.from(
+      ingredient
+      .totalsByUnit
+      .entries()
+    ).map(([unit, amount]) =>
+      formatTotalQuantity(amount, unit)
     );
 
-    const uniqueNotes = [...new Set(item.notes)];
+    const uniqueNotes = [...new Set(ingredient.notes)];
 
     return {
-      name: item.name,
-      quantities: item.quantities,
-      totalQuantity: combinedTotals.length > 0 ? combinedTotals.join(" + ") : null,
-      unparsedQuantities: item.unparsedQuantities,
+      name: ingredient.name,
+      quantities: ingredient.quantities,
+      totalQuantity: 
+        combinedTotals.length > 0 ? combinedTotals.join(" + ") 
+        : null,
+      unparsedQuantities: ingredient.unparsedQuantities,
       notes: uniqueNotes,
     };
   });
@@ -446,8 +648,21 @@ export const generateWeeklyMenu = async (
   next: NextFunction
 ) => {
   try {
-    const { source, days = 7, startDate } = req.body;
-    const userId = req.user!.id;
+    const {
+      source,
+      days = 7,
+      startDate
+    } = req.body;
+
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const userId = req.user.id;
 
     const parsedStartDate = startDate
       ? parseLocalDate(startDate) 
@@ -460,45 +675,30 @@ export const generateWeeklyMenu = async (
       });
     }
 
-    let recipes;
-
-    if (source === "favorites") {
-      const favorites = await prisma.favorite.findMany({
-        where: { userId },
-        include: {
-          recipe: {
-            include: {
-              ingredients: {
-                include: {
-                  ingredient: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      recipes = favorites.map((favorite) => favorite.recipe);
-    } else {
-      recipes = await prisma.recipe.findMany({
-        include: {
-          ingredients: {
-            include: {
-              ingredient: true,
-            },
-          },
-        },
-      });
-    }
+    const recipes = await getRecipePool(source, userId);
 
     const breakfastRecipes = recipes.filter((recipe) =>
-      recipe.mealTypes.includes("breakfast")
+      recipe
+      .mealTypes
+      .includes(
+        "breakfast"
+      )
     );
+
     const lunchRecipes = recipes.filter((recipe) =>
-      recipe.mealTypes.includes("lunch")
+      recipe
+      .mealTypes
+      .includes(
+        "lunch"
+      )
     );
+
     const dinnerRecipes = recipes.filter((recipe) =>
-      recipe.mealTypes.includes("dinner")
+      recipe
+      .mealTypes
+      .includes(
+        "dinner"
+      )
     );
 
     if (
@@ -528,13 +728,18 @@ export const generateWeeklyMenu = async (
       });
     }
 
+    // Shuffle recipes first to reduce repetition.
     const shuffledBreakfast = shuffleArray(breakfastRecipes);
     const shuffledLunch = shuffleArray(lunchRecipes);
     const shuffledDinner = shuffleArray(dinnerRecipes);
 
-    const menu = [];
+    const menu: WeeklyMenuDay[] = [];
 
     for (let i = 0; i < days; i++) {
+      /**
+       * Reuse recipes cyclically if there
+       * are fewer recipes than requested days.
+       */
       const breakfast = shuffledBreakfast[i % shuffledBreakfast.length];
       const lunch = shuffledLunch[i % shuffledLunch.length];
       const dinner = shuffledDinner[i % shuffledDinner.length];
@@ -543,7 +748,7 @@ export const generateWeeklyMenu = async (
       currentDate.setDate(parsedStartDate.getDate() + i);
 
       menu.push({
-        day: dayNames[currentDate.getDay()],
+        day: DAY_NAMES[currentDate.getDay()],
         date: formatLocalDate(currentDate),
         meals: {
           breakfast: formatRecipe(breakfast),
@@ -583,59 +788,64 @@ export const rerollMenuRecipe = async (
       currentMenu,
     } = req.body;
 
-    const userId = req.user!.id;
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
-    if (dayIndex < 0 || dayIndex >= currentMenu.length) {
+    if (!VALID_MEAL_TYPES.includes(mealType)){
+      return res.status(400).json({
+        success: false,
+        message: "Invalid meal type.",
+      });
+    }
+
+    const userId = req.user.id;
+
+    if (
+      dayIndex < 0 ||
+      dayIndex >= currentMenu.length
+    ) {
       return res.status(400).json({
         success: false,
         message: "Invalid dayIndex.",
       });
     }
 
-    let recipes;
-
-    if (source === "favorites") {
-      const favorites = await prisma.favorite.findMany({
-        where: { userId },
-        include: {
-          recipe: {
-            include: {
-              ingredients: {
-                include: {
-                  ingredient: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      recipes = favorites.map((favorite) => favorite.recipe);
-    } else {
-      recipes = await prisma.recipe.findMany({
-        include: {
-          ingredients: {
-            include: {
-              ingredient: true,
-            },
-          },
-        },
-      });
-    }
+    const recipes = await getRecipePool(source, userId);
 
     const excludedIds = new Set(
       [excludeRecipeId, ...usedRecipeIds].filter(Boolean)
     );
 
-    let candidates = recipes.filter(
-      (recipe) =>
-        recipe.mealTypes.includes(mealType) && !excludedIds.has(recipe.id)
+    let candidates = 
+      recipes.filter(
+        (recipe) =>
+          recipe
+          .mealTypes
+          .includes(
+            mealType
+          ) && 
+          !excludedIds.has(
+            recipe.id
+          )
     );
 
+    /**
+     * If all recipes were excluded,
+     * allows reuse of all but the current recipe.
+    */
     if (candidates.length === 0) {
       candidates = recipes.filter(
         (recipe) =>
-          recipe.mealTypes.includes(mealType) && recipe.id !== excludeRecipeId
+          recipe
+          .mealTypes
+          .includes(
+            mealType
+          ) &&
+          recipe.id !== excludeRecipeId
       );
     }
 
@@ -649,23 +859,31 @@ export const rerollMenuRecipe = async (
     const [selectedRecipe] = shuffleArray(candidates);
     const formattedRecipe = formatRecipe(selectedRecipe);
 
-    const updatedMenu = currentMenu.map((day: any, index: number) => {
-      if (index !== dayIndex) return day;
+    const updatedMenu = currentMenu.map(
+      (
+        day: WeeklyMenuDay,
+        index: number
+      ) => {
+        if (index !== dayIndex) {
+          return day;
+        }
 
-      return {
-        ...day,
-        meals: {
-          ...day.meals,
-          [mealType]: formattedRecipe,
-        },
-      };
-    });
+        return {
+          ...day,
+          meals: {
+            ...day.meals,
+            [mealType]: formattedRecipe,
+          },
+        };
+      }
+    );
 
     const ingredientsSummary = buildIngredientSummary(updatedMenu);
 
     return res.status(200).json({
       success: true,
       message: "Recipe rerolled successfully",
+
       data: {
         recipe: formattedRecipe,
         ingredientsSummary,

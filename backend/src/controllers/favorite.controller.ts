@@ -1,4 +1,41 @@
 import prisma from "../config/prisma";
+import type { NextFunction, Request, Response } from "express";
+
+
+// Transforms the favorited recipe data into the form used by the front end.
+function serializeFavoriteRecipe(favorite: {
+  createdAt: Date;
+  recipe: {
+    id: string;
+    name: string;
+    description: string | null;
+    instructions: string[];
+    mealTypes: string[];
+    createdAt: Date;
+    ingredients: Array<{
+      quantity: string | null;
+      ingredient: {
+        id: string;
+        name: string;
+      };
+    }>;
+  };
+}) {
+  return {
+    id: favorite.recipe.id,
+    name: favorite.recipe.name,
+    description: favorite.recipe.description,
+    instructions: favorite.recipe.instructions,
+    mealTypes: favorite.recipe.mealTypes,
+    createdAt: favorite.recipe.createdAt,
+    ingredients: favorite.recipe.ingredients.map((recipeIngredient) => ({
+      id: recipeIngredient.ingredient.id,
+      name: recipeIngredient.ingredient.name,
+      quantity: recipeIngredient.quantity,
+    })),
+    favoritedAt: favorite.createdAt,
+  };
+}
 
 export const addFavorite = async (
   req: Request,
@@ -7,8 +44,17 @@ export const addFavorite = async (
 ) => {
   try {
     const { recipeId } = req.params;
-    const userId = req.user!.id;
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const userId = req.user.id;
+
+    // Only allows users to favorite existing recipes.
     const existingRecipe = await prisma.recipe.findUnique({
       where: { id: recipeId },
     });
@@ -20,13 +66,16 @@ export const addFavorite = async (
       });
     }
 
-    const existingFavorite = await prisma.favorite.findUnique({
-      where: {
-        userId_recipeId: {
-          userId,
-          recipeId,
-        },
+    const favoriteKey = {
+      userId_recipeId: {
+        userId,
+        recipeId,
       },
+    };
+
+    // Prevents duplicate favorites for the same user and recipe pair.
+    const existingFavorite = await prisma.favorite.findUnique({
+      where: favoriteKey,
     });
 
     if (existingFavorite) {
@@ -60,15 +109,25 @@ export const removeFavorite = async (
 ) => {
   try {
     const { recipeId } = req.params;
-    const userId = req.user!.id;
 
-    const existingFavorite = await prisma.favorite.findUnique({
-      where: {
-        userId_recipeId: {
-          userId,
-          recipeId,
-        },
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const userId = req.user.id;
+
+    const favoriteKey = {
+      userId_recipeId: {
+        userId,
+        recipeId,
       },
+    };
+    
+    const existingFavorite = await prisma.favorite.findUnique({
+      where: favoriteKey,
     });
 
     if (!existingFavorite) {
@@ -79,12 +138,7 @@ export const removeFavorite = async (
     }
 
     await prisma.favorite.delete({
-      where: {
-        userId_recipeId: {
-          userId,
-          recipeId,
-        },
-      },
+      where: favoriteKey,
     });
 
     return res.status(200).json({
@@ -102,7 +156,14 @@ export const getFavorites = async (
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.id;
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const userId = req.user.id;
 
     const favorites = await prisma.favorite.findMany({
       where: { userId },
@@ -122,20 +183,7 @@ export const getFavorites = async (
       },
     });
 
-    const formattedFavorites = favorites.map((favorite) => ({
-      id: favorite.recipe.id,
-      name: favorite.recipe.name,
-      description: favorite.recipe.description,
-      instructions: favorite.recipe.instructions,
-      mealTypes: favorite.recipe.mealTypes,
-      createdAt: favorite.recipe.createdAt,
-      ingredients: favorite.recipe.ingredients.map((ri) => ({
-        id: ri.ingredient.id,
-        name: ri.ingredient.name,
-        quantity: ri.quantity,
-      })),
-      favoritedAt: favorite.createdAt,
-    }));
+    const formattedFavorites = favorites.map(serializeFavoriteRecipe);
 
     return res.status(200).json({
       success: true,
